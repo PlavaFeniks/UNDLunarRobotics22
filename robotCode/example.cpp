@@ -18,8 +18,13 @@ using namespace ctre::phoenix::motorcontrol::can;
 /* make some talons for drive train */
 TalonSRX talLeft(3);
 TalonSRX talRght(4);
+
+
+
 TalonSRX rear_talLeft(1);
-TalonSRX rear_talRght(6);
+TalonSRX rear_talRght(2);
+
+//TalonSRX diggerDrive(6);
 
 void initDrive()
 {
@@ -28,22 +33,50 @@ void initDrive()
 	rear_talRght.SetInverted(true);
 }
 
-void drive(double fwd, double turn)
+void ldrive(double fwd, double turn)
 {
 	//double drivePerc = 1.00;
-	double left = fwd - turn;
+	double left = fwd - turn
+	//double rght = fwd + turn; /* positive turn means turn robot LEFT */
+
+	//ctre::phoenix::unmanaged::FeedEnable(100);
+	//std::cout<<ctre::phoenix::unmanaged::GetEnableState();
+	talLeft.Set(ControlMode::PercentOutput, left);
+	rear_talLeft.Set(ControlMode::PercentOutput, left);
+	
+	/*
+	rear_talRght.Set(ControlMode::PercentOutput, rght);
+	talRght.Set(ControlMode::PercentOutput, rght);
+	*/
+	
+}
+
+void rdrive(double fwd, double turn)
+{
+	//double drivePerc = 1.00;
+	//double left = fwd - turn
 	double rght = fwd + turn; /* positive turn means turn robot LEFT */
 
 	//ctre::phoenix::unmanaged::FeedEnable(100);
 	//std::cout<<ctre::phoenix::unmanaged::GetEnableState();
-	//printf("ITS REAL G HOURS RN");
-	//talLeft.Set(ControlMode::PercentOutput, left);
-	//rear_talLeft.Set(ControlMode::PercentOutput, left);
-	
 	rear_talRght.Set(ControlMode::PercentOutput, rght);
-	//talRght.Set(ControlMode::PercentOutput, rght);
+	talRght.Set(ControlMode::PercentOutput, rght);
+	
+	/*
+	 * talLeft.Set(ControlMode::PercentOutput, left);
+	rear_talLeft.Set(ControlMode::PercentOutput, left);
+	
+	*/
+	
 }
-/** simple wrapper for code cleanup */
+void drive(double fwd){
+	
+	//diggerDrive.Set(ControlMode::PercentOutput, fwd);
+	
+	
+	
+}
+/* simple wrapper for code cleanup */
 void sleepApp(int ms)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
@@ -68,7 +101,8 @@ int main() {
 	while (true) {
 		/* we are looking for gamepad (first time or after disconnect),
 			neutral drive until gamepad (re)connected. */
-		drive(0, 0);
+		ldrive(0, 0);
+		rdrive(0, 0);
 		/*
 		while (true){
 			printf("FUCKING CHRIST WHAT THE FUCK");
@@ -143,21 +177,28 @@ int main() {
 			/* grab some stick values */
 			double y = ((double)SDL_JoystickGetAxis(joy, 0)) / -32767.0;
 			double turn = ((double)SDL_JoystickGetAxis(joy, 1)) / -32767.0;
+			double ry = ((double)SDL_JoystickGetAxis(joy, 3)) / -32767.0;
+			double rturn = ((double)SDL_JoystickGetAxis(joy, 4)) / -32767.0;
 			//ctre::phoenix::unmanaged::FeedEnable(100);
-			drive(y, turn);
+			ldrive(y, turn);
+			rdrive(ry, rturn);
+			//double q = ((double)SDL_JoystickGetAxis(joy,2))  / -32767.0;
+			//drive(q);
 
 			/* [SAFETY] only enable drive if top left shoulder button is held down */
 			if (SDL_JoystickGetButton(joy, 4)) {
 				ctre::phoenix::unmanaged::FeedEnable(100);
 				std::cout<<"HOLYFUCK \n";
 			}
+			//else if (fix this bitch later) basically just use right bumper as a toggle or something. 
 
 			/* loop yield for a bit */
 			sleepApp(20);
 		}
 
 		/* we've left the loop, likely due to gamepad disconnect */
-		drive(0, 0);
+		ldrive(0, 0);
+		rdrive(0, 0);
 		SDL_JoystickClose(joy);
 		printf("gamepad disconnected\n");
 	}
