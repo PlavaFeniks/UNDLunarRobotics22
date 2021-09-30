@@ -1,0 +1,9 @@
+
+void LeftMotorMove (TalonSRX leftMotor, double  percentage){
+	
+        if (( -1 <= percentage) and (percentage <= 1)) {
+	leftMotor.set(percentage);
+	
+	}
+
+}
