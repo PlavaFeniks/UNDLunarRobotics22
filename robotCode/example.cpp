@@ -8,35 +8,117 @@
 #include <chrono>
 #include <thread>
 #include <SDL2/SDL.h>
+#include <filesystem>
 #include <unistd.h>
+#include <pthread.h>
+#include <string>
+#include <fstream>
+#include <sys/types.h>
+#include <dirent.h>
+#include <stdio.h>
 
+#define upperDlim .5
+#define lowerDlim .0
+#define locoThresh .1
+#define minHeight -500
+#define maxHeight 500  
+using namespace std;
 using namespace ctre::phoenix;
 using namespace ctre::phoenix::platform;
 using namespace ctre::phoenix::motorcontrol;
 using namespace ctre::phoenix::motorcontrol::can;
 
+//Declare Prototypes please
+void sleepApp(int ms);
+
+//Declare filePointer//
+//FILE *outputCSV;
+
+
+
 /* make some talons for drive train */
+TalonSRX diggerDrive(6);
+
+
 TalonSRX talLeft(3);
 TalonSRX talRght(4);
-
-
+TalonSRX screwDriver(5);
+TalonSRX hopper(7);
 
 TalonSRX rear_talLeft(1);
 TalonSRX rear_talRght(2);
 
+SensorCollection diggSensor(diggerDrive);
+SensorCollection r_tL(rear_talLeft);
+SensorCollection r_tR(rear_talRght);
+SensorCollection tL(talLeft);
+SensorCollection tR(talRght);
+SensorCollection screw_log(screwDriver);
+SensorCollection hop(hopper);
+
+double diggerDSpeed;
+int screwHeight = 0;
+bool logging = false;
 //TalonSRX diggerDrive(6);
+
 
 void initDrive()
 {
-	/* both talons should blink green when driving forward */
-	talRght.SetInverted(true);
-	rear_talRght.SetInverted(true);
+	
 }
+void invertDrive(TalonSRX* sender)
+{
+	if(sender->GetInverted()){
+		sender->SetInverted(false);
+		return;
+	}
+	sender->SetInverted(true);
+	
+}
+void screwDrive(double speed){
+	/*
+	if (!(screwHeight >= maxHeight or screwHeight <= minHeight) and speed != 0.00)
+	{
+	
+	//screwHeight += 1;
+	}
+	*/
+	screwDriver.Set(ControlMode::PercentOutput,speed);
+	
+	return;
+}
+void hoppinout(double speed){
+	
+	hopper.Set(ControlMode::PercentOutput,speed);
+	return;
+}
+void stepDigger(double stepFunc){
+	double tSpeed = 0;
+	tSpeed = diggerDSpeed + stepFunc;
+	if ((tSpeed >= upperDlim) or (tSpeed<=lowerDlim)){
+		std::cout<<"THIS IS AN INVALID NUMBER CANNOT GO ABOVE .85 or BELOW .10"<<std::endl;
+		return;
+	}
+	else{
+		diggerDSpeed = tSpeed;
+		std::cout<<"DIGGER SPEED PERCENT CHANGED: "<<diggerDSpeed<<std::endl;
+		sleepApp(500);
+		return;
+		
+	}
+}
+void setDiggerDrive(){
+	diggerDrive.Set(ControlMode::PercentOutput, diggerDSpeed);
 
+	std::cout<<typeid(diggerDrive).name()<<std::endl;
+	std::cout<<diggerDrive.GetSensorCollection().GetQuadraturePosition()<<"\nCOCKNBALLTORTURE\n";
+	std::cout<<diggerDrive.GetMotorOutputVoltage()<<"\n";
+	return;
+}
 void ldrive(double fwd, double turn)
 {
 	//double drivePerc = 1.00;
-	double left = fwd - turn
+	double left = fwd - turn;
 	//double rght = fwd + turn; /* positive turn means turn robot LEFT */
 
 	//ctre::phoenix::unmanaged::FeedEnable(100);
@@ -82,11 +164,58 @@ void sleepApp(int ms)
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
+void *loggingThread2(void *threadData)
+{
+	const auto start = std::chrono::system_clock::now();
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	int count;
+	DIR *logsDir;
+	int i = 0;
+	struct dirent *ep;
+	logsDir = opendir("./logs");
+	if (logsDir){
+		while (ep = readdir(logsDir)){
+			i++;
+		}
+		(void)closedir(logsDir);
+	}
+	
+	//outputCSV = fopen(fileOpen.c_str(), "w+"); //add screw back
+	string fileOpen = "./logs/log"+to_string(i)+".csv";
+	std::ofstream outputCSV;
+	outputCSV.open(fileOpen.c_str());
+	cout<<fileOpen<<" has been opened for logging"<<endl;
+	outputCSV<<"time, rear talLeft voltage, rear talRght voltage , talLeft voltage, talrght voltage, screwdriver voltage, bucket voltage, hopper voltage\n";
+	while(logging)
+	{
+		end = std::chrono::steady_clock::now();
+		//Time_elapsed is actual code, rest is currently pseudo
+		outputCSV<< std::chrono::duration_cast<std::chrono::seconds> (end - begin).count() <<","<< rear_talLeft.GetMotorOutputVoltage()<< "," << rear_talRght.GetMotorOutputVoltage() << ",";
+		outputCSV<< talLeft.GetMotorOutputVoltage()<< "," <<talRght.GetMotorOutputVoltage() << ",";
+		outputCSV<< screwDriver.GetMotorOutputVoltage()<<"," <<diggerDrive.GetMotorOutputVoltage()<<","; // add back screw_log.GetQuadraturePosition
+		outputCSV<< hopper.GetMotorOutputVoltage()<<"\n";
+		sleepApp(250);
+	}
+	
+	
+	//ogging = true;
+	cout<<"HHHHHHHHHHHHHHHHHHHHHHHHHHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+	outputCSV.close();
+	pthread_exit(NULL);
+	
+}
+
 int main() {
 	/* don't bother prompting, just use can0 */
 	//std::cout << "Please input the name of your can interface: ";
 	
+	pthread_t myThread;
+	
+	//pthread_join(myThread, NULL);
+	
 	std::string interface;
+	
 	//std::cin >> interface;
 	interface = "can0";
 	ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
@@ -103,14 +232,8 @@ int main() {
 			neutral drive until gamepad (re)connected. */
 		ldrive(0, 0);
 		rdrive(0, 0);
-		/*
-		while (true){
-			printf("FUCKING CHRIST WHAT THE FUCK");
-		ctre::phoenix::unmanaged::FeedEnable(100);
-		std::cout<<ctre::phoenix::unmanaged::GetEnableState();
-		drive(10000, 30);
-	}
-	*/
+		diggerDSpeed = .25;
+		
 	
 
 		// wait for gamepad
@@ -137,7 +260,7 @@ int main() {
 			/* back to top of while loop */
 			continue;
 		}
-
+		
 		// Get information about the joystick
 		const char *name = SDL_JoystickName(joy);
 		const int num_axes = SDL_JoystickNumAxes(joy);
@@ -152,17 +275,7 @@ int main() {
 			num_buttons,
 			num_hats);
 
-		/* I'm using a logitech F350 wireless in D mode.
-		If num axis is 6, then gamepad is in X mode, so neutral drive and wait for D mode.
-		[SAFETY] This means 'X' becomes our robot-disable button.
-		This can be removed if that's not the goal. */
-		/*
-		if (num_axes >= 6) {
-			/* back to top of while loop 
-			//printf("WHATTHEFUCK");
-			continue;
-		}
-		*/
+		
 
 		// Keep reading the state of the joystick in a loop
 		while (true) {
@@ -179,17 +292,92 @@ int main() {
 			double turn = ((double)SDL_JoystickGetAxis(joy, 1)) / -32767.0;
 			double ry = ((double)SDL_JoystickGetAxis(joy, 3)) / -32767.0;
 			double rturn = ((double)SDL_JoystickGetAxis(joy, 4)) / -32767.0;
+			diggerDrive.Set(ControlMode::PercentOutput, 0.00);
+
+			for (int i = 0; i< num_buttons; i++){
+				if (SDL_JoystickGetButton(joy,i)){
+					cout<<"This is button " << i << "\n";
+				}
+			}
+			
+			//std::cout<<ry<<std::endl;
 			//ctre::phoenix::unmanaged::FeedEnable(100);
+			ldrive(0.00, 0.00);
+			rdrive(0.00, 0.00);
+			screwDrive(0.00);
+			hoppinout(0.00);
+			if(abs(turn) > locoThresh or abs(rturn) > locoThresh){
+			//std::cout<< "ThisShouldBeMoving"<<std::endl;
 			ldrive(y, turn);
 			rdrive(ry, rturn);
+			}
+			
+			if ((double)SDL_JoystickGetAxis(joy,2) > 0){
+			setDiggerDrive();
+			std::cout<<"WHY AM I RUNNING HOLY FUCK JESUS FUCKING CHRIST\n";
+			
+			}
+			if ((double)SDL_JoystickGetAxis(joy,5) > 0){
+				hoppinout(.50);
+				std::cout<<"This Code is Dog Shit"<<std::endl;
+			}
 			//double q = ((double)SDL_JoystickGetAxis(joy,2))  / -32767.0;
 			//drive(q);
 
 			/* [SAFETY] only enable drive if top left shoulder button is held down */
 			if (SDL_JoystickGetButton(joy, 4)) {
 				ctre::phoenix::unmanaged::FeedEnable(100);
-				std::cout<<"HOLYFUCK \n";
 			}
+			else if (SDL_JoystickGetButton(joy, 5)) {
+				invertDrive(&diggerDrive);
+				invertDrive(&hopper);
+				sleepApp(500);
+				
+			}
+			/*
+			for (int i = 0; i<num_buttons;i++){
+				if(SDL_JoystickGetButton(joy,i)){
+				std::cout<<"EYO G THIS FUCKER IS BUTTON NUMBER: "<< i<<std::endl;
+				}
+			}
+			*/
+			
+			if (SDL_JoystickGetButton(joy,2)){
+				
+				//cout<< n<<endl;
+				if (!logging){
+				logging = true;
+				pthread_create(&myThread,NULL,loggingThread2,NULL);
+				sleep(5);
+				}
+			}
+			else if(SDL_JoystickGetButton(joy,3)){
+				if(logging){
+				logging = false;
+				cout<<"EYO THE LOGGING THREAD HAS DONE BEEN KILLED\n";
+				if(pthread_join(myThread, NULL) == 0)
+				cout<<"Thread has successfully been joined, no longer a zombozo\n";
+				sleep(5);
+				}
+			}
+		
+			if (SDL_JoystickGetHat(joy,0) == SDL_HAT_UP){
+				std::cout<<"EVERYBODY WALK THE DINOSAUR"<<std::endl;
+				stepDigger(.05);
+			}
+			else if (SDL_JoystickGetHat(joy,0) == SDL_HAT_DOWN){
+				std::cout<<"EVERYBODY Get on the floor"<<std::endl;
+				stepDigger(-.05);
+			}
+			else if (SDL_JoystickGetHat(joy,0) == SDL_HAT_LEFT){
+				std::cout<<"EVERYBODY WALK THE DINOSAUR"<<std::endl;
+				screwDrive(.50);
+			}
+			else if (SDL_JoystickGetHat(joy,0) == SDL_HAT_RIGHT){
+				std::cout<<"EVERYBODY Get on the floor"<<std::endl;
+				screwDrive(-.50);
+			}
+			
 			//else if (fix this bitch later) basically just use right bumper as a toggle or something. 
 
 			/* loop yield for a bit */
