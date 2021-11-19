@@ -12,17 +12,12 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <string>
-#include <fstream>
-#include <sys/types.h>
-#include <dirent.h>
-#include <stdio.h>
 
 #define upperDlim .5
 #define lowerDlim .0
 #define locoThresh .1
 #define minHeight -500
 #define maxHeight 500  
-using namespace std;
 using namespace ctre::phoenix;
 using namespace ctre::phoenix::platform;
 using namespace ctre::phoenix::motorcontrol;
@@ -32,7 +27,7 @@ using namespace ctre::phoenix::motorcontrol::can;
 void sleepApp(int ms);
 
 //Declare filePointer//
-//FILE *outputCSV;
+FILE *outputCSV;
 
 
 
@@ -47,24 +42,18 @@ TalonSRX hopper(7);
 
 TalonSRX rear_talLeft(1);
 TalonSRX rear_talRght(2);
-
 SensorCollection diggSensor(diggerDrive);
-SensorCollection r_tL(rear_talLeft);
-SensorCollection r_tR(rear_talRght);
-SensorCollection tL(talLeft);
-SensorCollection tR(talRght);
-SensorCollection screw_log(screwDriver);
-SensorCollection hop(hopper);
-
 double diggerDSpeed;
 int screwHeight = 0;
-bool logging = false;
 //TalonSRX diggerDrive(6);
+
 
 
 void initDrive()
 {
-	
+	/* both talons should blink green when driving forward */
+	//talRght.SetInverted(true);
+	//rear_talRght.SetInverted(true);
 }
 void invertDrive(TalonSRX* sender)
 {
@@ -110,9 +99,9 @@ void stepDigger(double stepFunc){
 void setDiggerDrive(){
 	diggerDrive.Set(ControlMode::PercentOutput, diggerDSpeed);
 
-	std::cout<<typeid(diggerDrive).name()<<std::endl;
-	std::cout<<diggerDrive.GetSensorCollection().GetQuadraturePosition()<<"\nCOCKNBALLTORTURE\n";
-	std::cout<<diggerDrive.GetMotorOutputVoltage()<<"\n";
+
+
+	std::cout<<diggerDrive.GetSensorCollection().GetAnalogIn()<<"\nCOCKNBALLTORTURE\n";
 	return;
 }
 void ldrive(double fwd, double turn)
@@ -163,47 +152,25 @@ void sleepApp(int ms)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
-
-void *loggingThread2(void *threadData)
+void *loggingThread(void *threadData)
 {
-	const auto start = std::chrono::system_clock::now();
-	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	int count;
-	DIR *logsDir;
-	int i = 0;
-	struct dirent *ep;
-	logsDir = opendir("./logs");
-	if (logsDir){
-		while (ep = readdir(logsDir)){
-			i++;
-		}
-		(void)closedir(logsDir);
-	}
-	
-	//outputCSV = fopen(fileOpen.c_str(), "w+"); //add screw back
-	string fileOpen = "./logs/log"+to_string(i)+".csv";
-	std::ofstream outputCSV;
-	outputCSV.open(fileOpen.c_str());
-	cout<<fileOpen<<" has been opened for logging"<<endl;
-	outputCSV<<"time, rear talLeft voltage, rear talRght voltage , talLeft voltage, talrght voltage, screwdriver voltage, bucket voltage, hopper voltage\n";
-	while(logging)
+	std::filesystem::path path {"logs"};
+	for (auto& p : std::filesystem::directory_iterator(path))
 	{
-		end = std::chrono::steady_clock::now();
-		//Time_elapsed is actual code, rest is currently pseudo
-		outputCSV<< std::chrono::duration_cast<std::chrono::seconds> (end - begin).count() <<","<< rear_talLeft.GetMotorOutputVoltage()<< "," << rear_talRght.GetMotorOutputVoltage() << ",";
-		outputCSV<< talLeft.GetMotorOutputVoltage()<< "," <<talRght.GetMotorOutputVoltage() << ",";
-		outputCSV<< screwDriver.GetMotorOutputVoltage()<<"," <<diggerDrive.GetMotorOutputVoltage()<<","; // add back screw_log.GetQuadraturePosition
-		outputCSV<< hopper.GetMotorOutputVoltage()<<"\n";
-		sleepApp(250);
+	++count;
 	}
+	std::cout << "# of files in " << path << ": " << count << '\n';
 	
+	std::string fileOpen = "logs/log" + (std::to_string(count)) + ".csv";
+	std::cout<<fileOpen<<std::endl;
+	outputCSV = fopen(fileOpen.c_str(), "w+");
+	fprintf(outputCSV,"HOE ASS BICHHHSHS\n");
 	
-	//ogging = true;
-	cout<<"HHHHHHHHHHHHHHHHHHHHHHHHHHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-	outputCSV.close();
-	pthread_exit(NULL);
+	fclose(outputCSV);
+	pthread_exit((int*)1);
 	
+	//return;
 }
 
 int main() {
@@ -211,8 +178,8 @@ int main() {
 	//std::cout << "Please input the name of your can interface: ";
 	
 	pthread_t myThread;
-	
-	//pthread_join(myThread, NULL);
+	pthread_create(&myThread,NULL,loggingThread,NULL);
+	pthread_join(myThread, NULL);
 	
 	std::string interface;
 	
@@ -234,6 +201,14 @@ int main() {
 		rdrive(0, 0);
 		diggerDSpeed = .25;
 		
+		/*
+		while (true){
+			printf("FUCKING CHRIST WHAT THE FUCK");
+		ctre::phoenix::unmanaged::FeedEnable(100);
+		std::cout<<ctre::phoenix::unmanaged::GetEnableState();
+		drive(10000, 30);
+	}
+	*/
 	
 
 		// wait for gamepad
@@ -293,13 +268,6 @@ int main() {
 			double ry = ((double)SDL_JoystickGetAxis(joy, 3)) / -32767.0;
 			double rturn = ((double)SDL_JoystickGetAxis(joy, 4)) / -32767.0;
 			diggerDrive.Set(ControlMode::PercentOutput, 0.00);
-
-			for (int i = 0; i< num_buttons; i++){
-				if (SDL_JoystickGetButton(joy,i)){
-					cout<<"This is button " << i << "\n";
-				}
-			}
-			
 			//std::cout<<ry<<std::endl;
 			//ctre::phoenix::unmanaged::FeedEnable(100);
 			ldrive(0.00, 0.00);
@@ -327,6 +295,7 @@ int main() {
 			/* [SAFETY] only enable drive if top left shoulder button is held down */
 			if (SDL_JoystickGetButton(joy, 4)) {
 				ctre::phoenix::unmanaged::FeedEnable(100);
+				std::cout<<"HOLYFUCK \n";
 			}
 			else if (SDL_JoystickGetButton(joy, 5)) {
 				invertDrive(&diggerDrive);
@@ -338,29 +307,9 @@ int main() {
 			for (int i = 0; i<num_buttons;i++){
 				if(SDL_JoystickGetButton(joy,i)){
 				std::cout<<"EYO G THIS FUCKER IS BUTTON NUMBER: "<< i<<std::endl;
-				}
 			}
-			*/
-			
-			if (SDL_JoystickGetButton(joy,2)){
-				
-				//cout<< n<<endl;
-				if (!logging){
-				logging = true;
-				pthread_create(&myThread,NULL,loggingThread2,NULL);
-				sleep(5);
-				}
-			}
-			else if(SDL_JoystickGetButton(joy,3)){
-				if(logging){
-				logging = false;
-				cout<<"EYO THE LOGGING THREAD HAS DONE BEEN KILLED\n";
-				if(pthread_join(myThread, NULL) == 0)
-				cout<<"Thread has successfully been joined, no longer a zombozo\n";
-				sleep(5);
-				}
-			}
-		
+		}
+		*/
 			if (SDL_JoystickGetHat(joy,0) == SDL_HAT_UP){
 				std::cout<<"EVERYBODY WALK THE DINOSAUR"<<std::endl;
 				stepDigger(.05);
