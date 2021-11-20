@@ -10,6 +10,7 @@
 #include <SDL2/SDL.h>
 #include <filesystem>
 #include <unistd.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <string>
 #include <fstream>
@@ -218,7 +219,11 @@ int main() {
 	
 	//std::cin >> interface;
 	interface = "can0";
-	ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
+	int temp; 
+	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
+		perror("");
+		std::_Exit(0);
+	}
 	
 	// Comment out the call if you would rather use the automatically running diag-server, note this requires uninstalling diagnostics from Tuner. 
 	// c_SetPhoenixDiagnosticsStartTime(-1); // disable diag server, instead we will use the diag server stand alone application that Tuner installs
