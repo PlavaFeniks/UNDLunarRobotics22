@@ -10,18 +10,32 @@
 #include <SDL2/SDL.h>
 #include <filesystem>
 #include <unistd.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <string>
 #include <fstream>
 #include <sys/types.h>
 #include <dirent.h>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
+#include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <chrono>
+#include <thread>
+#include <string.h>
 
-#define upperDlim .5
+#define upperDlim .7
 #define lowerDlim .0
+const float screwSpeed = 0.4;
+
 #define locoThresh .1
 #define minHeight -500
 #define maxHeight 500  
+
 using namespace std;
 using namespace ctre::phoenix;
 using namespace ctre::phoenix::platform;
@@ -38,16 +52,12 @@ void sleepApp(int ms);
 
 /* make some talons for drive train */
 TalonSRX diggerDrive(6);
-
-
 TalonSRX talLeft(3);
 TalonSRX talRght(4);
 TalonSRX screwDriver(5);
 TalonSRX hopper(7);
-
 TalonSRX rear_talLeft(1);
 TalonSRX rear_talRght(2);
-
 SensorCollection diggSensor(diggerDrive);
 SensorCollection r_tL(rear_talLeft);
 SensorCollection r_tR(rear_talRght);
@@ -59,7 +69,7 @@ SensorCollection hop(hopper);
 double diggerDSpeed;
 int screwHeight = 0;
 bool logging = false;
-//TalonSRX diggerDrive(6);
+
 
 
 void initDrive()
@@ -76,13 +86,7 @@ void invertDrive(TalonSRX* sender)
 	
 }
 void screwDrive(double speed){
-	/*
-	if (!(screwHeight >= maxHeight or screwHeight <= minHeight) and speed != 0.00)
-	{
 	
-	//screwHeight += 1;
-	}
-	*/
 	screwDriver.Set(ControlMode::PercentOutput,speed);
 	
 	return;
@@ -96,7 +100,7 @@ void stepDigger(double stepFunc){
 	double tSpeed = 0;
 	tSpeed = diggerDSpeed + stepFunc;
 	if ((tSpeed >= upperDlim) or (tSpeed<=lowerDlim)){
-		std::cout<<"THIS IS AN INVALID NUMBER CANNOT GO ABOVE .85 or BELOW .10"<<std::endl;
+		std::cout<<"THIS IS AN INVALID NUMBER CANNOT GO ABOVE" <<upperDlim<< "or BELOW "<<lowerDlim<<std::endl;
 		return;
 	}
 	else{
@@ -117,55 +121,67 @@ void setDiggerDrive(){
 }
 void ldrive(double fwd, double turn)
 {
-	//double drivePerc = 1.00;
 	double left = fwd - turn;
-	//double rght = fwd + turn; /* positive turn means turn robot LEFT */
-
-	//ctre::phoenix::unmanaged::FeedEnable(100);
-	//std::cout<<ctre::phoenix::unmanaged::GetEnableState();
 	talLeft.Set(ControlMode::PercentOutput, left);
 	rear_talLeft.Set(ControlMode::PercentOutput, left);
 	
-	/*
-	rear_talRght.Set(ControlMode::PercentOutput, rght);
-	talRght.Set(ControlMode::PercentOutput, rght);
-	*/
 	
 }
 
 void rdrive(double fwd, double turn)
 {
-	//double drivePerc = 1.00;
-	//double left = fwd - turn
+	
 	double rght = fwd + turn; /* positive turn means turn robot LEFT */
 
-	//ctre::phoenix::unmanaged::FeedEnable(100);
-	//std::cout<<ctre::phoenix::unmanaged::GetEnableState();
+
 	rear_talRght.Set(ControlMode::PercentOutput, rght);
 	talRght.Set(ControlMode::PercentOutput, rght);
-	
-	/*
-	 * talLeft.Set(ControlMode::PercentOutput, left);
-	rear_talLeft.Set(ControlMode::PercentOutput, left);
-	
-	*/
-	
+
 }
 void drive(double fwd){
-	
-	//diggerDrive.Set(ControlMode::PercentOutput, fwd);
-	
+		
 	
 	
 }
-/* simple wrapper for code cleanup */
 void sleepApp(int ms)
 {
-	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+	this_thread::sleep_for(chrono::milliseconds(ms));
 }
 
 void *loggingThread2(void *threadData)
 {
+	char aboslute_path[] = "/dev/ttyACM0";
+	int serial_fd;
+    serial_fd = open(aboslute_path, O_RDONLY|O_NOCTTY); //O_NONBLOCK
+    if (serial_fd < 0) {
+    printf("Error %i from open: %s\n", errno, strerror(errno));
+    std::_Exit(0);
+    }
+   
+
+    
+        struct termios tty;
+        char read_buf;
+
+
+        cfsetspeed(&tty,B9600);
+        if(tcgetattr(serial_fd, &tty) != 0) {
+            printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
+        }   
+        
+        cfmakeraw(&tty);
+        
+        tty.c_cflag |= CS8;
+        tty.c_lflag |=(CLOCAL| CREAD);
+        tty.c_iflag &= ~(IXOFF|IXON);
+        tty.c_cc[VMIN] = 1;
+        tty.c_cc[VTIME] = 0;
+        
+        
+        
+       tcsetattr(serial_fd,TCSANOW,&tty);
+       double current = 0.00;
+       
 	const auto start = std::chrono::system_clock::now();
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -186,15 +202,26 @@ void *loggingThread2(void *threadData)
 	std::ofstream outputCSV;
 	outputCSV.open(fileOpen.c_str());
 	cout<<fileOpen<<" has been opened for logging"<<endl;
-	outputCSV<<"time, rear talLeft voltage, rear talRght voltage , talLeft voltage, talrght voltage, screwdriver voltage, bucket voltage, hopper voltage\n";
+	outputCSV<<"time, rear talLeft voltage, rear talRght voltage , talLeft voltage, talrght voltage, screwdriver voltage, bucket voltage, hopper voltage, CURRENT(amps)\n";
 	while(logging)
 	{
+			string temp;
+            while(read_buf != ','){
+                int n = read(serial_fd, &read_buf, 1);//was sizeof(readbuf)
+                temp += read_buf;
+                
+            }   
+            
+            read_buf = ' ';
+           // cout<<current<<endl;
+            
+            current = atof(temp.c_str());
 		end = std::chrono::steady_clock::now();
 		//Time_elapsed is actual code, rest is currently pseudo
-		outputCSV<< std::chrono::duration_cast<std::chrono::seconds> (end - begin).count() <<","<< rear_talLeft.GetMotorOutputVoltage()<< "," << rear_talRght.GetMotorOutputVoltage() << ",";
+		outputCSV<< std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() <<","<< rear_talLeft.GetMotorOutputVoltage()<< "," << rear_talRght.GetMotorOutputVoltage() << ",";
 		outputCSV<< talLeft.GetMotorOutputVoltage()<< "," <<talRght.GetMotorOutputVoltage() << ",";
 		outputCSV<< screwDriver.GetMotorOutputVoltage()<<"," <<diggerDrive.GetMotorOutputVoltage()<<","; // add back screw_log.GetQuadraturePosition
-		outputCSV<< hopper.GetMotorOutputVoltage()<<"\n";
+		outputCSV<< hopper.GetMotorOutputVoltage()<<","<<to_string(current)<<"\n";
 		sleepApp(250);
 	}
 	
@@ -208,7 +235,7 @@ void *loggingThread2(void *threadData)
 
 int main() {
 	/* don't bother prompting, just use can0 */
-	//std::cout << "Please input the name of your can interface: ";
+
 	
 	pthread_t myThread;
 	
@@ -218,7 +245,11 @@ int main() {
 	
 	//std::cin >> interface;
 	interface = "can0";
-	ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
+	int temp; 
+	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
+		perror("");
+		std::_Exit(0);
+	}
 	
 	// Comment out the call if you would rather use the automatically running diag-server, note this requires uninstalling diagnostics from Tuner. 
 	// c_SetPhoenixDiagnosticsStartTime(-1); // disable diag server, instead we will use the diag server stand alone application that Tuner installs
@@ -228,8 +259,7 @@ int main() {
 	
 
 	while (true) {
-		/* we are looking for gamepad (first time or after disconnect),
-			neutral drive until gamepad (re)connected. */
+		
 		ldrive(0, 0);
 		rdrive(0, 0);
 		diggerDSpeed = .25;
@@ -279,6 +309,7 @@ int main() {
 
 		// Keep reading the state of the joystick in a loop
 		while (true) {
+			cout<<"WHY IS EN FUCKING DUMB\n";
 			/* poll for disconnects or bad things */
 			//printf("WHAT THE FUCK");
 			SDL_Event event;
@@ -334,13 +365,7 @@ int main() {
 				sleepApp(500);
 				
 			}
-			/*
-			for (int i = 0; i<num_buttons;i++){
-				if(SDL_JoystickGetButton(joy,i)){
-				std::cout<<"EYO G THIS FUCKER IS BUTTON NUMBER: "<< i<<std::endl;
-				}
-			}
-			*/
+			
 			
 			if (SDL_JoystickGetButton(joy,2)){
 				
@@ -371,11 +396,11 @@ int main() {
 			}
 			else if (SDL_JoystickGetHat(joy,0) == SDL_HAT_LEFT){
 				std::cout<<"EVERYBODY WALK THE DINOSAUR"<<std::endl;
-				screwDrive(.50);
+				screwDrive(screwSpeed);
 			}
 			else if (SDL_JoystickGetHat(joy,0) == SDL_HAT_RIGHT){
 				std::cout<<"EVERYBODY Get on the floor"<<std::endl;
-				screwDrive(-.50);
+				screwDrive(-(screwSpeed));
 			}
 			
 			//else if (fix this bitch later) basically just use right bumper as a toggle or something. 
