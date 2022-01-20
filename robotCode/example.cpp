@@ -27,7 +27,7 @@
 #include <chrono>
 #include <thread>
 #include <string.h>
-
+#include "movement.h"
 #define upperDlim .7
 #define lowerDlim .0
 const float screwSpeed = 0.4;
@@ -51,10 +51,11 @@ void sleepApp(int ms);
 
 
 /* make some talons for drive train */
+TalonPair screwDriver(5);
 TalonSRX diggerDrive(6);
 TalonSRX talLeft(3);
 TalonSRX talRght(4);
-TalonSRX screwDriver(5);
+//TalonSRX screwDriver(5);
 TalonSRX hopper(7);
 TalonSRX rear_talLeft(1);
 TalonSRX rear_talRght(2);
@@ -63,7 +64,7 @@ SensorCollection r_tL(rear_talLeft);
 SensorCollection r_tR(rear_talRght);
 SensorCollection tL(talLeft);
 SensorCollection tR(talRght);
-SensorCollection screw_log(screwDriver);
+//SensorCollection screw_log(screwDriver);
 SensorCollection hop(hopper);
 
 double diggerDSpeed;
@@ -87,8 +88,8 @@ void invertDrive(TalonSRX* sender)
 }
 void screwDrive(double speed){
 	
-	screwDriver.Set(ControlMode::PercentOutput,speed);
-	
+	//screwDriver.Set(ControlMode::PercentOutput,speed);
+	screwDriver.SETSPEED(speed);
 	return;
 }
 void hoppinout(double speed){
@@ -147,6 +148,7 @@ void sleepApp(int ms)
 {
 	this_thread::sleep_for(chrono::milliseconds(ms));
 }
+/*
 
 void *loggingThread2(void *threadData)
 {
@@ -232,6 +234,7 @@ void *loggingThread2(void *threadData)
 	pthread_exit(NULL);
 	
 }
+*/
 
 int main() {
 	/* don't bother prompting, just use can0 */
@@ -335,7 +338,7 @@ int main() {
 			//ctre::phoenix::unmanaged::FeedEnable(100);
 			ldrive(0.00, 0.00);
 			rdrive(0.00, 0.00);
-			screwDrive(0.00);
+			screwDrive(0);
 			hoppinout(0.00);
 			if(abs(turn) > locoThresh or abs(rturn) > locoThresh){
 			//std::cout<< "ThisShouldBeMoving"<<std::endl;
@@ -372,7 +375,7 @@ int main() {
 				//cout<< n<<endl;
 				if (!logging){
 				logging = true;
-				pthread_create(&myThread,NULL,loggingThread2,NULL);
+				//pthread_create(&myThread,NULL,loggingThread2,NULL);
 				sleep(5);
 				}
 			}
