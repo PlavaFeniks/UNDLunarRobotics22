@@ -111,6 +111,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named testbed
+
+# Build rule for target.
+testbed: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 testbed
+.PHONY : testbed
+
+# fast build rule for target.
+testbed/fast:
+	$(MAKE) -f CMakeFiles/testbed.dir/build.make CMakeFiles/testbed.dir/build
+.PHONY : testbed/fast
+
+#=============================================================================
 # Target rules for targets named example
 
 # Build rule for target.
@@ -150,6 +163,33 @@ example.cpp.s:
 	$(MAKE) -f CMakeFiles/example.dir/build.make CMakeFiles/example.dir/example.cpp.s
 .PHONY : example.cpp.s
 
+testbed.o: testbed.cpp.o
+
+.PHONY : testbed.o
+
+# target to build an object file
+testbed.cpp.o:
+	$(MAKE) -f CMakeFiles/testbed.dir/build.make CMakeFiles/testbed.dir/testbed.cpp.o
+.PHONY : testbed.cpp.o
+
+testbed.i: testbed.cpp.i
+
+.PHONY : testbed.i
+
+# target to preprocess a source file
+testbed.cpp.i:
+	$(MAKE) -f CMakeFiles/testbed.dir/build.make CMakeFiles/testbed.dir/testbed.cpp.i
+.PHONY : testbed.cpp.i
+
+testbed.s: testbed.cpp.s
+
+.PHONY : testbed.s
+
+# target to generate assembly for a file
+testbed.cpp.s:
+	$(MAKE) -f CMakeFiles/testbed.dir/build.make CMakeFiles/testbed.dir/testbed.cpp.s
+.PHONY : testbed.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -158,10 +198,14 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... testbed"
 	@echo "... example"
 	@echo "... example.o"
 	@echo "... example.i"
 	@echo "... example.s"
+	@echo "... testbed.o"
+	@echo "... testbed.i"
+	@echo "... testbed.s"
 .PHONY : help
 
 
