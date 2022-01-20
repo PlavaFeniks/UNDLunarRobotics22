@@ -1,5 +1,5 @@
 #ignore cmake garbage
-./robotCode/bin/
+robotCode/bin/
 ./robotCode/CMakeFiles/
 ./robotCode/cmake_install.cmake
 ./robotCode/CMakeCache.txt
