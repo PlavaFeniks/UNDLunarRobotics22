@@ -1,4 +1,0 @@
-/home/alex/Documents/UNDLunarRobotics22/CMakeFiles/rebuild_cache.dir
-/home/alex/Documents/UNDLunarRobotics22/CMakeFiles/edit_cache.dir
-/home/alex/Documents/UNDLunarRobotics22/CMakeFiles/testbed.dir
-/home/alex/Documents/UNDLunarRobotics22/CMakeFiles/example.dir
