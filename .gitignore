@@ -4,6 +4,3 @@ robotCode/CMakeFiles/
 robotCode/cmake_install.cmake
 robotCode/CMakeCache.txt
 robotCode/Makefile
-
-#ignore executables
-!*.* 
