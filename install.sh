@@ -23,7 +23,7 @@ sudo apt-get install libsdl2-2.0
 
 #pipe input to  /etc/networks/interface file
 
-sudo cp $temp_home/pi/interfaces.d  /etc/network/
+sudo cp $temp_home/pi/interfaces.d  /etc/network/interfaces
 sudo cp $temp_home/pi/robo.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable robo.service && sudo systemctl start robo.service
 sudo apt-get upgrade
