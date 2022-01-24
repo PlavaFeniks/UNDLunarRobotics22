@@ -31,6 +31,12 @@ if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf") # Jetson TK1 /
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixPlatform_socketcan.a)
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCanutils.a)
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCore.a)
+    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_Phoenix.a)
+    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCCI.a)
+    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixDiagnostics.a)
+    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixPlatform_socketcan.a)
+    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCanutils.a)
+    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCore.a)
 elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_Phoenix.a)
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCCI.a)
