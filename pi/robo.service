@@ -1,0 +1,14 @@
+[Unit]
+Description = This robot will absolutely SHREEEEEEEEEKKKKKKKKKK the competition
+StartLimitIntervalSec=10
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/lib/Phoenix-Linux-SocketCAN-Example/bin/example
+WorkingDirectory=/usr/lib/Phoenix-Linux-SocketCAN-Example
+Restart=no
+RestartLimitBurst=10
+
+[Install]
+WantedBy=multi-user.target
