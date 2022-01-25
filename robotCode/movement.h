@@ -8,6 +8,7 @@ using namespace ctre::phoenix;
 using namespace ctre::phoenix::platform;
 using namespace ctre::phoenix::motorcontrol;
 using namespace ctre::phoenix::motorcontrol::can;
+using namespace std;
 enum MotorControl {PERCENT, POSITION, VELOCITY};
 
 class TalonPair{
@@ -26,10 +27,12 @@ class TalonPair{
 	}
 	TalonPair(int, int, float *);
 	TalonPair(int, int);
-	void SETSPEED(float speed){
+	void SETSPEED(double speed){
 
 		switch (motorType){
 			case PERCENT:
+
+				//if
 				if(abs(speed) > limit[1]){
 					mc ->Set(ControlMode::PercentOutput, limit[1]);
 				}
@@ -39,15 +42,19 @@ class TalonPair{
 				}
 				else{
 					mc->Set(ControlMode::PercentOutput, speed);
-
+					cout<<"hello"<<endl;
 				}
+				break;
+				//endif
+
 			case VELOCITY:
-				/*include PID math HERE*/
-				std::cout<<"nerd";
+				mc->Set(ControlMode::Velocity, speed);
+				cout<<"what";
+				break;
 			case POSITION:
 				std::cout<<"HOWDY";
 				/*include velocity math here*/
-
+				break;
 			
 		}
 
@@ -69,17 +76,17 @@ class TalonPair{
 
 TalonPair::TalonPair(int motor, int ControlMode){
 	mc = new TalonSRX(motor);
-		sc = &(mc)->GetSensorCollection();
-		limit[0] = 0.0;
-		limit[1] = 1.0;
-		motorType = ControlMode;
+	sc = &(mc)->GetSensorCollection();
+	limit[0] = 0.0;
+	limit[1] = 1.0;
+	motorType = ControlMode;
 };
 
 TalonPair::TalonPair(int motor, int ControlMode, float *limits){
 	mc = new TalonSRX(motor);
-		sc = &(mc)->GetSensorCollection();
-		
-		(abs(limits[0]) < 0)? limit[0] = 0: limit[0] = limits[0];
-		(abs(limits[1]) > 1)? limit[1] = 1: limit[1] = limits[1];
-		motorType = ControlMode;
+	sc = &(mc)->GetSensorCollection();
+	
+	(abs(limits[0]) < 0)? limit[0] = 0: limit[0] = limits[0];
+	(abs(limits[1]) > 1)? limit[1] = 1: limit[1] = limits[1];
+	motorType = ControlMode;
 };
