@@ -40,14 +40,32 @@ int main(int argc, char* argv[]){
     setup();
     chrono::steady_clock::time_point start = chrono::steady_clock::now();
     
+    char x;
+    if (
+        
+       ( cin >> x) == 'x'){
     while(true){
         ctre::phoenix::unmanaged::FeedEnable(10000);
        
+
+
+
         bucketRaw.SETSPEED(.50);
         cout<<"\n";
         
         cout<<"I have been running for " <<double( (chrono::duration_cast<chrono::milliseconds> (chrono::steady_clock::now() - start).count()) /1000.0)<<" seconds"<<endl;
     }
+
+    else {
+        cout << "u momma\n";
+
+
+    }
+
+
+    
+       }
+    
 
     return(0);
 }
