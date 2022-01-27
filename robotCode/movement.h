@@ -27,6 +27,9 @@ class TalonPair{
 	}
 	TalonPair(int, int, float *);
 	TalonPair(int, int);
+	TalonPair(int, int, bool);
+	//void SETSPEED(double);
+
 	void SETSPEED(double speed){
 
 		switch (motorType){
@@ -42,7 +45,6 @@ class TalonPair{
 				}
 				else{
 					mc->Set(ControlMode::PercentOutput, speed);
-					cout<<"hello"<<endl;
 				}
 				break;
 				//endif
@@ -53,7 +55,7 @@ class TalonPair{
 				break;
 			case POSITION:
 				std::cout<<"HOWDY";
-				/*include velocity math here*/
+				mc->Set(ControlMode::Position, speed);
 				break;
 			
 		}
@@ -77,10 +79,29 @@ class TalonPair{
 TalonPair::TalonPair(int motor, int ControlMode){
 	mc = new TalonSRX(motor);
 	sc = &(mc)->GetSensorCollection();
-	limit[0] = 0.0;
-	limit[1] = 1.0;
 	motorType = ControlMode;
+	
+	if (!ControlMode){
+		limit[0] = 0.0;
+		limit[1] = 1.0;
+	}
+	
 };
+
+
+TalonPair::TalonPair(int motor, int ControlMode, bool inverted){
+	mc = new TalonSRX(motor);
+	sc = &(mc)->GetSensorCollection();
+	motorType = ControlMode;
+	if (!ControlMode){
+		limit[0] = 0.0;
+		limit[1] = 1.0;
+	}
+	if(inverted){
+		mc->SetInverted(true);
+	}
+	
+}
 
 TalonPair::TalonPair(int motor, int ControlMode, float *limits){
 	mc = new TalonSRX(motor);
