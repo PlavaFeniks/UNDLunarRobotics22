@@ -18,8 +18,8 @@ using namespace std;
 TalonPair* buckets;
 TalonPair* screwdriver;
 
-TalonPair bucketRaw(1);
-TalonPair screwRaw(6);
+TalonPair bucketRaw(1,PERCENT);
+TalonPair screwRaw(6,PERCENT);
 TalonPair leftback(1,VELOCITY);
 
 void setup(){
@@ -41,17 +41,71 @@ int main(int argc, char* argv[]){
     setup();
     chrono::steady_clock::time_point start = chrono::steady_clock::now();
     
-    char x;
+    char x;  // X button input
+    float I;  // Current input
+    float Ie; // Current epected
+    char LSwitch; // Switch repersenting digger is fully lowered
+    char HSwitch // Switch representing digger is fully raised
+
+
     if (( cin >> x) == 'x'){
     while(true){
         ctre::phoenix::unmanaged::FeedEnable(10000);
        
-        //bucketRaw.SETSPEED(.50);
+       
+        bucketRaw.SETSPEED(.75); 
+
+        screwRaw.SETSPEED(.75);
+
+
+        // if the lower switch is pressed
+        if ((cin >> LSwitch) == 'LSwitch'){
+
+        while(true)
+        {
+            bucketRaw.SETSPEED(0);
+            screwRaw.SETSPEED(-.75);
+
+            if ((cin >> HighSwitch)== 'HSwitch'){
+
+                return 0;
+
+            }
+            else {
+                cout << "the contration of 'who' and 'are' is Whore";
+            }
+
+
+        }
+
+        }
+        // if the load is too much
+        else if((cin >> I) >= Ie){
+        while (true)
+        {
+            screwRaw.SETSPEED(-.75)
+
+        }
+        else{
+
+            cout<< "no issues"
+        }
+        
+
+        }
+
+
         cout<<"\n";
         
-        cout<<"I have been running for " <<double( (chrono::duration_cast<chrono::milliseconds> (chrono::steady_clock::now() - start).count()) /1000.0)<<" seconds"<<endl;
-        leftback.SETSPEED(50)
-   
+        //buckets.SETSPEED()
+
+
+        //cout<<"I have been running for " <<double( (chrono::duration_cast<chrono::milliseconds> (chrono::steady_clock::now() - start).count()) /1000.0)<<" seconds"<<endl;
+        //leftback.SETSPEED(50)
+        //bucketRaw.SETSPEED(.50);
+
+
+
    
     }
 
