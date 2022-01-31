@@ -10,6 +10,7 @@ using namespace ctre::phoenix::motorcontrol;
 using namespace ctre::phoenix::motorcontrol::can;
 using namespace std;
 enum MotorControl {PERCENT, POSITION, VELOCITY};
+enum TALON_MOTORCONTROLLERS {ZeroMotor, RearLeft, RearRight, FrontLeft, FrontRight};
 
 class TalonPair{
 	public:
