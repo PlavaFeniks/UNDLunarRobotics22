@@ -7,6 +7,7 @@ This executable is designed to facillitate the development and testing of variou
 */
 
 #include "movement.h"
+#include "infra/readSerial.h"
 
 #include <string>
 #include <iostream>
@@ -17,6 +18,7 @@ using namespace std;
 
 TalonPair* buckets;
 TalonPair* screwdriver;
+readSerial ampSerial((char*)"/dev/ttyACM0");
 
 TalonPair bucketRaw(1);
 TalonPair screwRaw(6);
@@ -39,12 +41,14 @@ void setup(){
 int main(int argc, char* argv[]){
     setup();
     chrono::steady_clock::time_point start = chrono::steady_clock::now();
+    string amps;
     
     while(true){
         ctre::phoenix::unmanaged::FeedEnable(10000);
        
         bucketRaw.SETSPEED(.50);
         cout<<"\n";
+        amps = ampSerial.getSerial();
         
         cout<<"I have been running for " <<double( (chrono::duration_cast<chrono::milliseconds> (chrono::steady_clock::now() - start).count()) /1000.0)<<" seconds"<<endl;
     }
