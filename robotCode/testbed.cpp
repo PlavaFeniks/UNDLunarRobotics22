@@ -18,9 +18,7 @@ using namespace std;
 TalonPair* buckets;
 TalonPair* screwdriver;
 
-TalonPair bucketRaw(1,PERCENT);
-TalonPair screwRaw(6,PERCENT);
-TalonPair leftback(1,VELOCITY);
+
 
 void setup(){
     buckets = new TalonPair(5);
@@ -48,7 +46,7 @@ int main(int argc, char* argv[]){
     char HSwitch // Switch representing digger is fully raised
 
 
-    if (( cin >> x) == 'x'){
+
     while(true){
         ctre::phoenix::unmanaged::FeedEnable(10000);
        
@@ -84,6 +82,18 @@ int main(int argc, char* argv[]){
         while (true)
         {
             screwRaw.SETSPEED(-.75)
+
+            if ((cin >> HighSwitch)== 'HSwitch'){
+
+                return 0;
+
+            }
+            else {
+                cout << "the contration of your mom";
+            }
+
+
+
 
         }
         else{
