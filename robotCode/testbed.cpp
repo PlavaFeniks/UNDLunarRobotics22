@@ -12,6 +12,11 @@ This executable is designed to facillitate the development and testing of variou
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <wriringPi.h>
+
+
+#define LSwitch 0 // Switch repersenting digger is fully lowered
+#define HSwitch 7// Switch representing digger is fully raised
 
 using namespace std;
 
@@ -39,11 +44,20 @@ int main(int argc, char* argv[]){
     setup();
     chrono::steady_clock::time_point start = chrono::steady_clock::now();
     
+    wiringPiSetup();
+    pinMode(HSwitch, INPUT);  // twlls gpio pins what is gettign pluged in
+    pinMode(LSwitch, INPUT);
+
+    pullUpDnControl(Hswitch, PUD_DOWN); // sets pull down resistors
+    pullUpDnControl(Lswitch, PUD_DOWN);
+
+
+
+
     char x;  // X button input
     float I;  // Current input
     float Ie; // Current epected
-    char LSwitch; // Switch repersenting digger is fully lowered
-    char HSwitch // Switch representing digger is fully raised
+    
 
 
 
@@ -57,14 +71,14 @@ int main(int argc, char* argv[]){
 
 
         // if the lower switch is pressed
-        if ((cin >> LSwitch) == 'LSwitch'){
+        if (digitalRead(LSwitch)){
 
         while(true)
         {
             bucketRaw.SETSPEED(0);
             screwRaw.SETSPEED(-.75);
 
-            if ((cin >> HighSwitch)== 'HSwitch'){
+            if (digitalRead(HSwitch)){
 
                 return 0;
 
@@ -83,7 +97,7 @@ int main(int argc, char* argv[]){
         {
             screwRaw.SETSPEED(-.75)
 
-            if ((cin >> HighSwitch)== 'HSwitch'){
+            if ((digitalRead(HSwitch)){
 
                 return 0;
 
