@@ -63,8 +63,8 @@ void chassis::PIVOT(int angle, double speed){
     
 }
 void chassis::setup(){
-    (__brght)->mc->SetInverted(true);
-    (__frght)->mc->SetInverted(true);
+    __brght->INVERT();
+    __frght->INVERT();
 }
 
 
