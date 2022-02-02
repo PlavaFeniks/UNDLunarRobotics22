@@ -29,6 +29,7 @@ class TalonPair{
 	TalonPair(int, int, float *);
 	TalonPair(int, int);
 	TalonPair(int, int, bool);
+	void INVERT();
 	//void SETSPEED(double);
 
 	void SETSPEED(double speed){
@@ -36,26 +37,27 @@ class TalonPair{
 		switch (motorType){
 			case PERCENT:
 
-				//if
+				//filter input speed and normalize to within limits set
 				if(abs(speed) > limit[1]){
-					mc ->Set(ControlMode::PercentOutput, limit[1]);
+					(speed<0)? speed = -limit[1] : speed = limit[1];
+					
 				}
 				else if ( abs(speed) < limit[0]){
-					mc ->Set(ControlMode::PercentOutput, limit[1]);
-
+					(speed<0)? speed = -limit[0] : speed = limit[0];
+					
 				}
-				else{
-					mc->Set(ControlMode::PercentOutput, speed);
-				}
+				//set the speed here
+				mc->Set(ControlMode::PercentOutput, speed);
+				
 				break;
 				//endif
 
 			case VELOCITY:
 				mc->Set(ControlMode::Velocity, speed);
-				cout<<"what";
+				cout<<"Velocity set to ###INSERT DOCUMENTATION ON VELOCITY HERE"<<endl;
 				break;
 			case POSITION:
-				std::cout<<"HOWDY";
+				std::cout<<"Position value set to ###INSERT INFORMATION FROM THE THING HERE###"<<endl;
 				mc->Set(ControlMode::Position, speed);
 				break;
 			
@@ -108,7 +110,16 @@ TalonPair::TalonPair(int motor, int ControlMode, float *limits){
 	mc = new TalonSRX(motor);
 	sc = &(mc)->GetSensorCollection();
 	
+	//if limits exceed eith 0 or 1, set to default values of 0 and 1
+	//else set to input vals
 	(abs(limits[0]) < 0)? limit[0] = 0: limit[0] = limits[0];
 	(abs(limits[1]) > 1)? limit[1] = 1: limit[1] = limits[1];
 	motorType = ControlMode;
 };
+
+void TalonPair::INVERT(){
+	//Set Inverted condition of self.mc to the opposite of what it currently is
+	mc->SetInverted(!(mc->GetInverted()));
+
+	return;
+}

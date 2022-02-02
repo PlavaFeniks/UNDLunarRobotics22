@@ -7,7 +7,7 @@ apt-get update
 export temp_home=$(pwd)
 
 #install Opencv
-sudo apt-get install -y cmake g++ wget unzip
+sudo apt-get install -y cmake g++ wget unzip 
 cd ~/Downloads
 wget -O ~/Downloads/opencv.zip https://github.com/opencv/opencv/archive/4.x.zip
 unzip  ~/Downloads/opencv.zip
@@ -17,8 +17,7 @@ cmake ../opencv-4.x
 cmake --build
 #return to original place 
 #install sdl2
-sudo apt-get install libsdl2-2.0
-
+sudo apt-get install libsdl2-dev
 
 
 #pipe input to  /etc/networks/interface file
