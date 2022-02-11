@@ -22,10 +22,11 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <unistd.h>
 #define WIDTH 90 //width of map
 #define HEIGHT 90 //height of map
 #include "/usr/include/python2.7/Python.h"
-#include "matplotlibcpp.h"
+#include "/home/rmc/Documents/GitRepos/UNDLunarRobotics22/robotCode/jettsonCode/matplotlibcpp.h"
 
 
 const int ACCURACY = 10; //how many times it will grab imagines
@@ -242,7 +243,7 @@ void getCloudAndPlane()
     runtime_parameters.sensing_mode = SENSING_MODE::STANDARD; // Use STANDARD sensing mode
 
     // Capture 50 images and depth, then stop
-    sl::Mat image, depth, point_cloud;
+    sl::Mat image, depth, point_cloud, confidence_map;
     
     // Enable positional tracking before starting spatial mapping
     //needed for ground plane stuff
@@ -250,16 +251,21 @@ void getCloudAndPlane()
     
     //loops a set amount of times, doesnt count if zed cant grab image
     int k=0;
+        float smallestX = 10000;
+        float largestX = -1;
+        float smallestY = 10000;
+        float largestY = -1;
     while (k < ACCURACY) {
         // A new image is available if grab() returns ERROR_CODE::SUCCESS
         if (!(zed.grab(runtime_parameters) == ERROR_CODE::SUCCESS)) continue;
         
         // Retrieve left image
-        zed.retrieveImage(image, VIEW::LEFT);
+        zed.retrieveImage(image, VIEW::RIGHT);
         // Retrieve depth map. Depth is aligned on the left image
         zed.retrieveMeasure(depth, MEASURE::DEPTH);
         // Retrieve colored point cloud. Point cloud is aligned on the left image.
-        zed.retrieveMeasure(point_cloud, MEASURE::XYZRGBA);
+        zed.retrieveMeasure(point_cloud, MEASURE::XYZ);
+        zed.retrieveMeasure(confidence_map, MEASURE::CONFIDENCE);
         
         
         
@@ -270,18 +276,27 @@ void getCloudAndPlane()
 		for (int i=0; i<imageWidth; i++)
 		{
 			for (int j=0; j<imageHeight; j++)
-			{
+			{	
+				float confidenceZED = 0;
+				confidence_map.getValue(i, j, &confidenceZED);
+				if (confidenceZED >50) continue; //1-100+
+				
+				
+				
 				sl::float4 point_cloud_value;
 				point_cloud.getValue(i,j,&point_cloud_value);
-				if (std::isfinite(point_cloud_value.z) && pointCloud[i][j] == std::numeric_limits<float>::infinity())
+				if (std::isfinite(point_cloud_value.z))
 				{
-					pointCloud[i][j] = point_cloud_value.z;
 					
-					Zval[i][j] = point_cloud_value.z;
-					Xval[i][j] = point_cloud_value.x;
-					Yval[i][j] = point_cloud_value.y;
+					if (smallestX > point_cloud_value.x) smallestX = point_cloud_value.x;
+					if (smallestY > point_cloud_value.y) smallestY = point_cloud_value.y;
+					if (largestX < point_cloud_value.x) largestX = point_cloud_value.x;
+					if (largestY < point_cloud_value.y) largestY = point_cloud_value.y;
+					Zval[i][j] = point_cloud_value.z/10;
+					Xval[i][j] = point_cloud_value.x/10+50;
+					Yval[i][j] = point_cloud_value.y/10;
 					int x = point_cloud_value.x/10;
-					int y = point_cloud_value.y/10;
+					int y = point_cloud_value.y/10+50;
 					int z = point_cloud_value.z/10;
 					if (x >=0 and x <WIDTH and y >=0 and y <HEIGHT) mapOfPit[y][x]->setXYZ(x, y, z);
 					/*
@@ -290,16 +305,6 @@ void getCloudAndPlane()
 					cout << "Y: " << y << "\n";
 					cout << "Z: " << z << "\n";
 					*/
-				}
-				else if (std::isfinite(point_cloud_value.z)) //if z is not infinite and already stored in point cloud array
-				{
-					float difference = point_cloud_value.z - pointCloud[i][j];
-					float absDifference = sqrt(difference * difference); //gets absolute value of difference
-					
-					
-					if (absDifference > maxDifference) maxDifference = absDifference;
-					if (absDifference < minDifference) minDifference = absDifference;
-					
 				}
 			}
 		}
@@ -350,6 +355,7 @@ void getCloudAndPlane()
 	gplaneB = theThing.y;
 	gplaneC = theThing.z;
 	gplaneD = theThing.w;*/
+		cout << "heres stuff " << smallestX << " " << smallestY << " " << largestX << " " << largestY << "\n";
 	Mapper1();
 	cout << maxDifference << "\n";
 	cout << minDifference << "\n";/*
@@ -447,8 +453,8 @@ void getGroundPlane()
 
 void ayoCheckIfMapWorking()
 {
-	system("clear");
-	for (int i=0; i<HEIGHT; i++)
+	cout << "start of map\n";
+	for (int i=HEIGHT-1; i>=0; i--)
 	{
 		for (int j=0; j<WIDTH; j++)
 		{
@@ -463,6 +469,8 @@ void ayoCheckIfMapWorking()
 		}
 		cout << "\n";
 	}
+	cout << "end of map\n";
+	sleep(1);
 }
 
 int main(int argc, char **argv) {
@@ -497,8 +505,7 @@ int main(int argc, char **argv) {
 	cout << "Printing Map of Pit, sleeping for 5 seconds\n";
 	sleep(1);
 	
-	while(1)
-	{ayoCheckIfMapWorking();}
+	ayoCheckIfMapWorking();
 	
 	while(true)
 	{
