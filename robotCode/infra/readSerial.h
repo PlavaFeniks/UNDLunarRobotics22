@@ -58,9 +58,8 @@ string readSerial::getSerial(){
     int n = read(fd, &read_buf, 1);
     while(read_buf != ','){
         outPutString += read_buf;
-        read(fd, &read_buf,1);
-
-    }
+        n =  read(fd, &read_buf,1);
+    } 
 
     return(outPutString);
 
