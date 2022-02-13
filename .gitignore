@@ -4,3 +4,10 @@ robotCode/CMakeFiles/
 robotCode/cmake_install.cmake
 robotCode/CMakeCache.txt
 robotCode/Makefile
+
+#ignore cmake garbage, but in jettsonCode
+robotCode/jettsonCode/build
+robotCode/jettsonCode/CMakeFiles
+robotCode/jettsonCode/cmake_install.cmake
+robotCode/jettsonCode/Makefile
+robotCode/jettsonCode/CMakeCache.txt
