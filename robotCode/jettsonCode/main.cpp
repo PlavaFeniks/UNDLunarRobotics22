@@ -29,7 +29,7 @@
 #include "/home/rmc/Documents/GitRepos/UNDLunarRobotics22/robotCode/jettsonCode/matplotlibcpp.h"
 
 
-const int ACCURACY = 10; //how many times it will grab imagines
+const int ACCURACY = 50; //how many times it will grab imagines
 using namespace std;
 using namespace sl;
 namespace plt = matplotlibcpp;
@@ -104,11 +104,9 @@ AStarNode ***mapOfPit = new AStarNode**[HEIGHT];
 int imageWidth = 1280;
 int imageHeight = 720;
 
-float pointCloud[1280][720]; //[x][y] gives z at point :: relative to ZED coordinates
-
-float Zval[1280][720];
-float Xval[1280][720];
-float Yval[1280][720];
+float ***Zval = new float**[imageWidth];//float Zval[1280][720];
+float ***Xval = new float**[imageWidth];//float Xval[1280][720];
+float ***Yval = new float**[imageWidth];//float Yval[1280][720];
 
 float gplaneA;
 float gplaneB;
@@ -155,7 +153,7 @@ void Mapper1(){
 	//Read in the sensor data and update the average value for the cell
 	// i and j for the image points, will need to smooth the data only taking verified points
 	
-	float cellSize = 10; //to go from mm to meter
+	float cellSize = 1; //to go from mm to meter
 	/*float a = groundPlane.x; 
 	float b = groundPlane.y;
 	float c = groundPlane.z;
@@ -164,43 +162,36 @@ void Mapper1(){
 		{
 			for (int j=0; j<imageHeight; j++)
 			{
-				int xhere = int(Xval[i][j]/cellSize);
-				int yhere = int(Yval[i][j]/cellSize);
-				float zhere = Zval[i][j];
+				if (Xval[i][j] == NULL) continue;
+				
+				int xhere = int(*Xval[i][j]/cellSize);
+				int yhere = int(*Yval[i][j]/cellSize);
+				float zhere = *Zval[i][j];
+				
 				//cout <<xhere << "  " << yhere << "  " << zhere << "\n";
 				
 				if (xhere >= 0 and xhere < WIDTH and yhere >= 0 and yhere < HEIGHT)
 				{
-					mapOfPit[xhere][yhere]->Zsum += zhere;
-					mapOfPit[xhere][yhere]->Nobs ++;
-					mapOfPit[xhere][yhere]->Zval = mapOfPit[xhere][yhere]->Zsum/float(mapOfPit[xhere][yhere]->Nobs);
+					mapOfPit[yhere][xhere]->Zsum += zhere;
+					mapOfPit[yhere][xhere]->Nobs ++;
+					mapOfPit[yhere][xhere]->Zval = mapOfPit[yhere][xhere]->Zsum/float(mapOfPit[yhere][xhere]->Nobs);
 					
-					Dist = abs(gplaneA*Xval[i][j]+gplaneB*Yval[i][j]+gplaneC*Zval[i][j]+gplaneD)/(sqrt(pow(gplaneA,2)+pow(gplaneB,2)+pow(gplaneC,2)));
+					Dist = abs(gplaneA*(*Xval[i][j])+gplaneB*(*Yval[i][j])+gplaneC*(*Zval[i][j])+gplaneD)/(sqrt(pow(gplaneA,2)+pow(gplaneB,2)+pow(gplaneC,2)));
 					
 					if (abs(Dist) >= threshVal)
 					{
-						mapOfPit[xhere][yhere]->OBS --;
-						mapOfPit[xhere][yhere]->Pocc = mapOfPit[xhere][yhere]->OBS/mapOfPit[xhere][yhere]->Nobs;
+						mapOfPit[yhere][xhere]->OBS --;
 					}else
 					{
-						mapOfPit[xhere][yhere]->OBS ++;
-						mapOfPit[xhere][yhere]->Pocc = mapOfPit[xhere][yhere]->OBS/mapOfPit[xhere][yhere]->Nobs;
+						mapOfPit[yhere][xhere]->OBS ++;
 					}
+					mapOfPit[yhere][xhere]->Pocc = mapOfPit[yhere][xhere]->OBS/mapOfPit[yhere][xhere]->Nobs;
 					
 				}
 				
-				
-				/*
-				sl::float4 point_cloud_value;
-				point_cloud.getValue(i,j,&point_cloud_value);
-				if (std::isfinite(point_cloud_value.z) && pointCloud[i][j] == std::numeric_limits<float>::infinity())
-				{
-					int z = point_cloud_value.z/10;
-					cout << z << "\n";
-					//if (x >=0 and x <100 and y >=0 and y <100) mapOfPit[y][x]->setXYZ(x, y, z);
-					
-					
-				}*/
+				Xval[i][j] = NULL;
+				Yval[i][j] = NULL;
+				Zval[i][j] = NULL;
 			}
 		}
 		
@@ -212,7 +203,10 @@ void Mapper1(){
 				if(mapOfPit[i][j]->Pocc < OccThresh)
 				{
 					mapOfPit[i][j]->isTraversable = false;
-					mapOfPit[i][j]->showOcc = 1;
+				}
+				else
+				{
+					mapOfPit[i][j]->isTraversable = true;
 				}
 			}
 		}
@@ -267,7 +261,24 @@ void getCloudAndPlane()
         zed.retrieveMeasure(point_cloud, MEASURE::XYZ);
         zed.retrieveMeasure(confidence_map, MEASURE::CONFIDENCE);
         
-        
+        //NEW PLANE DATA
+		sl::Plane plane;
+		sl::Transform resetTrackingFloorFrame;
+
+		ERROR_CODE find_plane_status = zed.findFloorPlane(plane, resetTrackingFloorFrame);
+		if(find_plane_status == ERROR_CODE::SUCCESS and plane.type == PLANE_TYPE::HORIZONTAL){
+			// Reset positional tracking to align it with the floor plane frame
+			//zed.resetPositionalTracking(resetTrackingFloorFrame);
+			sl::float4 theThing = plane.getPlaneEquation();
+				gplaneA = theThing.x;
+				gplaneB = theThing.y;
+				gplaneC = theThing.z;
+				gplaneD = theThing.w;
+		}
+		else
+		{
+			continue;
+		}
         
 		sl::Pose zed_pose;
         POSITIONAL_TRACKING_STATE state = zed.getPosition(zed_pose, REFERENCE_FRAME::WORLD);
@@ -282,7 +293,6 @@ void getCloudAndPlane()
 				if (confidenceZED >50) continue; //1-100+
 				
 				
-				
 				sl::float4 point_cloud_value;
 				point_cloud.getValue(i,j,&point_cloud_value);
 				if (std::isfinite(point_cloud_value.z))
@@ -292,9 +302,9 @@ void getCloudAndPlane()
 					if (smallestY > point_cloud_value.y) smallestY = point_cloud_value.y;
 					if (largestX < point_cloud_value.x) largestX = point_cloud_value.x;
 					if (largestY < point_cloud_value.y) largestY = point_cloud_value.y;
-					Zval[i][j] = point_cloud_value.z/10;
-					Xval[i][j] = point_cloud_value.x/10+50;
-					Yval[i][j] = point_cloud_value.y/10;
+					Zval[i][j] = new float(point_cloud_value.z/10);
+					Xval[i][j] = new float(point_cloud_value.x/10+50);
+					Yval[i][j] = new float(point_cloud_value.y/10);
 					int x = point_cloud_value.x/10;
 					int y = point_cloud_value.y/10+50;
 					int z = point_cloud_value.z/10;
@@ -331,32 +341,17 @@ void getCloudAndPlane()
 		*/
 		
 		
-		//NEW PLANE DATA
-		sl::Plane plane;
-		sl::Transform resetTrackingFloorFrame;
-
-		ERROR_CODE find_plane_status = zed.findFloorPlane(plane, resetTrackingFloorFrame);
-
-		if(find_plane_status == ERROR_CODE::SUCCESS and plane.type == PLANE_TYPE::HORIZONTAL){
-			// Reset positional tracking to align it with the floor plane frame
-			//zed.resetPositionalTracking(resetTrackingFloorFrame);
-			sl::float4 theThing = plane.getPlaneEquation();
-				gplaneA = theThing.x;
-				gplaneB = theThing.y;
-				gplaneC = theThing.z;
-				gplaneD = theThing.w;
-
-		}
 		
 		
+		
+		Mapper1();
 		k += 1;       
 	}/*
 	gplaneA = plane.getPlaneEquation(x);
 	gplaneB = theThing.y;
 	gplaneC = theThing.z;
 	gplaneD = theThing.w;*/
-		cout << "heres stuff " << smallestX << " " << smallestY << " " << largestX << " " << largestY << "\n";
-	Mapper1();
+		cout << "\nheres stuff " << smallestX << " " << smallestY << " " << largestX << " " << largestY << "\n";
 	cout << maxDifference << "\n";
 	cout << minDifference << "\n";/*
 	float a = tempPlane.getPlaneEquation().x; 
@@ -437,19 +432,22 @@ void initializeTesselatedMap()
 		}
 	}
 }
+void initializeOccupancyMapXYZVal()
+{
+	for (int i=0; i<imageWidth; i++)
+	{
+		Zval[i] = new float*[imageHeight];
+		Xval[i] = new float*[imageHeight];
+		Yval[i] = new float*[imageHeight];
+		for (int j=0; j<imageHeight; j++)
+		{
+			Zval[i][j] = NULL;
+			Xval[i][j] = NULL;
+			Yval[i][j] = NULL;
+		}
+	}
+}
 
-void getPosition()
-{
-	
-}
-void fillPointCloud()
-{
-	
-}
-void getGroundPlane()
-{
-	
-}
 
 void ayoCheckIfMapWorking()
 {
@@ -460,10 +458,12 @@ void ayoCheckIfMapWorking()
 		{
 			if (mapOfPit[i][j]->isTraversable)
 			{
+				//cout << "0?\t";
 				cout << "0";
 			}
 			else
 			{
+				//cout << mapOfPit[i][j]->Zval << "\t";
 				cout << "1";				
 			}
 		}
@@ -474,12 +474,9 @@ void ayoCheckIfMapWorking()
 }
 
 int main(int argc, char **argv) {
-	//cout <<"HELP ME" << "\n";
-	//sleep(2);
-	FillArray(pointCloud, std::numeric_limits<float>::infinity());
 	
 	initializeTesselatedMap();
-	
+	initializeOccupancyMapXYZVal();
 	// Set configuration parameters
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -516,8 +513,8 @@ int main(int argc, char **argv) {
 	mapOfPit[1][1]->Zsum += 5;
 	//plt::plot_surface(x, y, z);
     //plt::show();
-	cout << mapOfPit[1][1]->Zsum <<"\n";
-	cout <<mapOfPit[10][50]->Zval <<"\n";
+	cout << mapOfPit[25][25]->Zsum <<"\n";
+	cout << mapOfPit[25][25]->Zval <<"\n";
     // Close the camera
     zed.close();
     return EXIT_SUCCESS;
