@@ -29,7 +29,7 @@
 #include "/home/rmc/Documents/GitRepos/UNDLunarRobotics22/robotCode/jettsonCode/matplotlibcpp.h"
 
 
-const int ACCURACY = 50; //how many times it will grab imagines
+const int ACCURACY = 10; //how many times it will grab imagines
 using namespace std;
 using namespace sl;
 namespace plt = matplotlibcpp;
@@ -51,12 +51,13 @@ class AStarNode
 	//OccMapVals
 	int Nobs = 0; //Number of times observed
 	int OBS = 0; //Running value of observation
-	double Pocc = 0.0; //Probability of occupancy
+	double Pocc = 1.0; //Probability of occupancy
 	int showOcc = 0;
 	//PointCloud Processing
 	float Zsum = 0;
 	int Npoints = 0;
 	float Zval = 0;
+	float Disthere = 0;
 	
 	
 	bool isTraversable = true;
@@ -114,7 +115,7 @@ float gplaneC;
 float gplaneD;
 
 double Dist;
-double threshVal = 2.0;
+double threshVal = 20.0;
 
 Plane groundPlane;
 /*ground plane = ax + by + cz = d FOR REFERENCE :: https://www.stereolabs.com/docs/api/classsl_1_1Plane.html#ae5080d63d8703462b5db4d1eb4333942
@@ -164,7 +165,7 @@ void Mapper1(){
 			{
 				if (Xval[i][j] == NULL) continue;
 				
-				int xhere = int(*Xval[i][j]/cellSize);
+				int xhere = int(*Xval[i][j]/cellSize+45);
 				int yhere = int(*Yval[i][j]/cellSize);
 				float zhere = *Zval[i][j];
 				
@@ -176,8 +177,8 @@ void Mapper1(){
 					mapOfPit[yhere][xhere]->Nobs ++;
 					mapOfPit[yhere][xhere]->Zval = mapOfPit[yhere][xhere]->Zsum/float(mapOfPit[yhere][xhere]->Nobs);
 					
-					Dist = abs(gplaneA*(*Xval[i][j])+gplaneB*(*Yval[i][j])+gplaneC*(*Zval[i][j])+gplaneD)/(sqrt(pow(gplaneA,2)+pow(gplaneB,2)+pow(gplaneC,2)));
-					
+					Dist = abs(gplaneA*(*Xval[i][j])*10+gplaneB*(*Yval[i][j])*10+gplaneC*(*Zval[i][j])*10+gplaneD)/(sqrt(pow(gplaneA,2)+pow(gplaneB,2)+pow(gplaneC,2)));
+					mapOfPit[yhere][xhere]->Disthere = Dist;
 					if (abs(Dist) >= threshVal)
 					{
 						mapOfPit[yhere][xhere]->OBS --;
@@ -282,7 +283,7 @@ void getCloudAndPlane()
         
 		sl::Pose zed_pose;
         POSITIONAL_TRACKING_STATE state = zed.getPosition(zed_pose, REFERENCE_FRAME::WORLD);
-        cout << "Translation: " << zed_pose.getTranslation().tx << " TX:"  <<" TY: " << zed_pose.getTranslation().ty<< " TZ: "<< zed_pose.getTranslation().tz;
+        //cout << "Translation: " << zed_pose.getTranslation().tx << " TX:"  <<" TY: " << zed_pose.getTranslation().ty<< " TZ: "<< zed_pose.getTranslation().tz;
         //this loop will iterate through every pixel on zed camera and get it's "z" value
 		for (int i=0; i<imageWidth; i++)
 		{
@@ -303,10 +304,10 @@ void getCloudAndPlane()
 					if (largestX < point_cloud_value.x) largestX = point_cloud_value.x;
 					if (largestY < point_cloud_value.y) largestY = point_cloud_value.y;
 					Zval[i][j] = new float(point_cloud_value.z/10);
-					Xval[i][j] = new float(point_cloud_value.x/10+50);
+					Xval[i][j] = new float(point_cloud_value.x/10);
 					Yval[i][j] = new float(point_cloud_value.y/10);
 					int x = point_cloud_value.x/10;
-					int y = point_cloud_value.y/10+50;
+					int y = point_cloud_value.y/10;
 					int z = point_cloud_value.z/10;
 					if (x >=0 and x <WIDTH and y >=0 and y <HEIGHT) mapOfPit[y][x]->setXYZ(x, y, z);
 					/*
@@ -456,16 +457,24 @@ void ayoCheckIfMapWorking()
 	{
 		for (int j=0; j<WIDTH; j++)
 		{
-			if (mapOfPit[i][j]->isTraversable)
+			// /*
+			if (mapOfPit[i][j]->Nobs==0)
+			{
+				//cout << mapOfPit[i][j]->Zval << "\t";
+				cout << " ";				
+			}
+			else if (mapOfPit[i][j]->isTraversable)
 			{
 				//cout << "0?\t";
-				cout << "0";
+				cout << " ";
 			}
 			else
 			{
-				//cout << mapOfPit[i][j]->Zval << "\t";
-				cout << "1";				
+				cout << "1";
 			}
+			//*/
+			//std::cout.precision(1);
+			//cout << mapOfPit[i][j]->Zval << "\t";
 		}
 		cout << "\n";
 	}
