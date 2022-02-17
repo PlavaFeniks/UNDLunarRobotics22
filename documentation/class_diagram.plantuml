@@ -1,0 +1,32 @@
+@startuml robot
+
+
+robot *-- CANBUS
+robot *-- Locomotion
+Locomotion *-- "4" motor
+robot *-- extraction
+extraction *-- "2" motor
+robot *-- deposition
+deposition *-- "1" motor
+robot *-- mainControlUnit
+
+
+motorcontroller "controls" --> motor
+
+CANBUS *-- motorcontroller
+CANBUS *-- CANable
+motorcontroller -- "0..1" encoder
+encoder "reads gearbox revolution" <-->  motor
+
+CANable "sends req frames" <--> "sends ack frames" motorcontroller
+
+mainControlUnit  " CTRE Phoenix API"  --> CANable
+mainControlUnit -- "0..1" gamepad
+mainControlUnit *-- "0..1" stereoCam
+ArduinoShuntResistor "sends amps" --> mainControlUnit
+
+
+RemoteComputer "ssh over wireless" - mainControlUnit
+
+
+@enduml
