@@ -40,7 +40,8 @@ double Dist;
 double threshVal = 20.0;
 
 
-void occupancyMap(){
+void occupancyMap()
+{
 	
 	//Read in the sensor data and update the average value for the cell
 	// i and j for the image points, will need to smooth the data only taking verified points
@@ -211,7 +212,7 @@ void initializeOccupancyMapXYZVal()
 	}
 }
 
-void cmdLineOccupancyMap()
+void cmdLineOccupancyMap() //displays the occupancy map in cmdline
 {
 	cout << "start of map\n";
 	for (int i=HEIGHT-1; i>=0; i--)
@@ -219,23 +220,11 @@ void cmdLineOccupancyMap()
 		for (int j=0; j<WIDTH; j++)
 		{
 			// /*
-			if (mapOfPit[i][j]->Nobs==0)
-			{
-				//cout << mapOfPit[i][j]->Zval << "\t";
-				cout << " ";				
-			}
-			else if (mapOfPit[i][j]->isTraversable)
-			{
-				//cout << "0?\t";
-				cout << " ";
-			}
-			else
-			{
-				cout << "1";
-			}
-			//*/
-			//std::cout.precision(1);
-			//cout << mapOfPit[i][j]->Zval << "\t";
+			if (mapOfPit[i][j]->child != NULL) cout << "-";
+			else if (mapOfPit[i][j] == endNode) cout << "x";
+			else if (mapOfPit[i][j]->Nobs==0) cout << " "; //if never observed				
+			else if (mapOfPit[i][j]->isTraversable) cout << " ";//if traversable
+			else cout << "1"; //if not traversable
 		}
 		cout << "\n";
 	}

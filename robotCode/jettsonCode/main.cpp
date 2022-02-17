@@ -39,10 +39,10 @@ Camera zed;
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
+#include "PathFollowing.h"
 
-int main(int argc, char **argv) {
-	zedTr = {0, 0, 0, 0, 0, 5};
-	cout << zedTr.rx << zedTr.rz << "\n";
+int main(int argc, char **argv)
+{
 	
 	initializeTesselatedMap();
 	initializeOccupancyMapXYZVal();
@@ -56,19 +56,21 @@ int main(int argc, char **argv) {
     
     // Open the camera
     auto returned_state = zed.open(init_parameters);
-    if (returned_state != ERROR_CODE::SUCCESS) {
+    if (returned_state != ERROR_CODE::SUCCESS)
+    {
         cout << "Error " << returned_state << ", exit program." << endl;
         return EXIT_FAILURE;
     }
     
-    getCloudAndPlane();
-	
-	cmdLineOccupancyMap();
-	
+    //getCloudAndPlane();
+	//startNode = mapOfPit[0][0];
+	//endNode = mapOfPit[89][50];
+	//FindPath(startNode);
+	//cmdLineOccupancyMap();
 	while(true)
 	{
-		break;
-		//PrintPosition();
+		GetTranslationImage();
+		//GetTranslationIMU();
 	}
 	
     // Close the camera

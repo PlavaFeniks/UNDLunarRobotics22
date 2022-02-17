@@ -4,7 +4,10 @@ class AStarNode;
 int calculateDistance(int x, int y, AStarNode* targetNode);
 int calculateDistance(int x, int y, int targetX, int targetY);
 
-AStarNode ***mapOfPit = new AStarNode**[HEIGHT]; //100 by 100 size of map
+AStarNode ***mapOfPit = new AStarNode**[HEIGHT]; //each index is 10cm by 10cm
+AStarNode* endNode;
+AStarNode* startNode;
+std::vector<AStarNode*>openNodes; //vector of input nodes
 
 struct //used for storing zed position
 {
@@ -41,6 +44,7 @@ class AStarNode
 	bool isTraversable = true;
 	bool isClose = false;
 	AStarNode* parent = NULL;
+	AStarNode* child = NULL;
 	
 	AStarNode(int x, int y, int z)
 	{
@@ -92,63 +96,71 @@ void initializeTesselatedMap()
 	}
 }
 
-//getPosition
-void PrintPosition()
+void definePath(AStarNode* endNode) //define path from startNode to EndNode
 {
-	bool isImu = true;
-	
-	sl::PositionalTrackingParameters tracking_parameters;
-    tracking_parameters.enable_area_memory = true;
-    
-    auto returned_state = zed.enablePositionalTracking(tracking_parameters);
-    if (returned_state != ERROR_CODE::SUCCESS) {
-        cout << "Enabling positionnal tracking failed: " <<  returned_state << "\n";
-        zed.close();
-        return;
-    }
-    
-    sl::Transform initialPosition;
-    string output = "";
-    float x=0;
-    float otherX = 0;
-	while (true)
+	if (endNode->parent == NULL) return;
+	endNode->parent->child = endNode;
+	definePath(endNode->parent);
+}
+void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node must be defined
+{
+	openNodes.push_back(startNode);
+	AStarNode* current = NULL;
+	int index = 0;
+	while(openNodes.size() != 0)
 	{
-		if (zed.grab() == ERROR_CODE::SUCCESS)
+		current = NULL;
+		//sets current to node in openNodes with lowest fCost
+		for (int i=0; i<(int)openNodes.size(); i++)
 		{
-			if (isImu)
+			if (current == NULL) {current = openNodes[i]; index = i; continue; }
+			if (openNodes[i]->fCost < current->fCost){current = openNodes[i]; index = i;}
+		}
+		if (current->x == endNode->x and current->y == endNode->y) break;
+		current->isClose = true;
+		
+		AStarNode** neighbors = new AStarNode*[8];
+		for (int i=0; i<8; i++) {neighbors[i] = NULL;}
+		int x = current->x;
+		int y = current->y;
+		
+		if (x>0)
+		{
+			neighbors[0] = mapOfPit[y][x-1];
+			if (y>0) neighbors[1] = mapOfPit[y-1][x-1];
+			if (y<HEIGHT-1) neighbors[2] = mapOfPit[y+1][x-1];
+		}
+		if (x<WIDTH)
+		{
+			neighbors[3] = mapOfPit[y][x+1];
+			if (y>0) neighbors[4] = mapOfPit[y-1][x+1];
+			if (y<HEIGHT-1) neighbors[5] = mapOfPit[y+1][x+1];
+		}
+		if (y>0) neighbors[6] = mapOfPit[y-1][x];
+		if (y<HEIGHT-1) neighbors[7] = mapOfPit[y+1][x];
+		
+		
+		for (int i=0; i<8; i++)
+		{
+			AStarNode* neighbor = neighbors[i];
+			if (neighbor == NULL) continue; //go to next neighbor if current one doesnt exist
+			if (neighbor->isTraversable == false or neighbor->isClose == true) continue; //go to next neighbor if current neighbor is not traversable or closed
+			int gCost = current->gCost + calculateDistance(current->x, current->y, neighbor->x, neighbor->y); //add gCost from parent and get distance from child to parent
+			if (neighbor->parent == NULL)
 			{
-				//https://www.stereolabs.com/docs/tutorials/using-sensors/
-				//https://www.stereolabs.com/docs/tutorials/positional-tracking/
-				SensorsData sensorsData;
-				SensorsData::IMUData imuData;
-				if (zed.getSensorsData(sensorsData, TIME_REFERENCE::CURRENT) == ERROR_CODE::SUCCESS) {
-					
-					sl::Pose zed_pose;
-					zed.getPosition(zed_pose, REFERENCE_FRAME::WORLD);
-					
-					zed_pose = sensorsData.imu.pose;
-					
-					x += zed_pose.getTranslation().x;
-					cout << "X: " << x << " vs " << zed_pose.getTranslation().x;
-					//sImu = false;
-					cout << "\n";
-				}
+				neighbor->parent = current;
+				neighbor->setGCost(gCost, endNode);
+				openNodes.push_back(neighbor);
 			}
-			else
+			else if (neighbor->gCost > gCost)
 			{
-				sl::Pose zed_pose;
-				auto state = zed.getPosition(zed_pose, REFERENCE_FRAME::WORLD);
-				cout << zed_pose.getTranslation().tx << "\n";
-				isImu = true;
-				// Get the pose of the camera relative to the world frame
-				// Display translation and timestamp
-				//printf("Translation: tx: %.3f, ty:  %.3f, tz:  %.3f, timestamp: %llu\r",
-				//zed_pose.getTranslation().tx, zed_pose.getTranslation().ty, zed_pose.getTranslation().tz, zed_pose.timestamp);
-				// Display orientation quaternion
-				//printf("Orientation: ox: %.3f, oy:  %.3f, oz:  %.3f, ow: %.3f\r",
-				//zed_pose.getOrientation().ox, zed_pose.getOrientation().oy, zed_pose.getOrientation().oz, zed_pose.getOrientation().ow);
+				neighbor->parent = current;
+				neighbor->setGCost(gCost, endNode);
 			}
 		}
-		else sleep_ms(1);
+		openNodes.erase(openNodes.begin() + index);
 	}
+	definePath(endNode);
 }
+
+
