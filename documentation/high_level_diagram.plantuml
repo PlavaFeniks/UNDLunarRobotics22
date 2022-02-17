@@ -1,0 +1,17 @@
+@startuml robot_highLevel
+
+robot *-- CANbus
+robot *-- maincontrolUnit
+robot *-- deposition
+robot *-- extraction
+robot *-- locomotion
+
+CANbus "drives" --> deposition
+CANbus "drives" --> extraction
+CANbus "drives" --> locomotion
+
+maincontrolUnit "Sends frames" --> CANbus
+
+
+
+@enduml
