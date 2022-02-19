@@ -10,9 +10,11 @@ using namespace ctre::phoenix::motorcontrol;
 using namespace ctre::phoenix::motorcontrol::can;
 using namespace std;
 enum MotorControl {PERCENT, POSITION, VELOCITY};
-enum TALON_MOTORCONTROLLERS {ZeroMotor, RearLeft, RearRight, FrontLeft, FrontRight};
+enum TALON_MOTORCONTROLLERS {ZeroMotor, RearLeft, RearRight, FrontLeft, FrontRight, Screw, Bucket, Hopper};
 
 class TalonPair{
+	private:
+		bool isManual = false;
 	public:
 		TalonSRX *mc;
 		SensorCollection *sc;
@@ -29,11 +31,15 @@ class TalonPair{
 	TalonPair(int, int, float *);
 	TalonPair(int, int);
 	TalonPair(int, int, bool);
+	int getQuadVelocity();
 	void INVERT();
+	void SWITCHMANUAL();
 	//void SETSPEED(double);
 
 	void SETSPEED(double speed){
-
+		if(!(isManual)){
+			ctre::phoenix::unmanaged::FeedEnable(200);
+		}
 		switch (motorType){
 			case PERCENT:
 
@@ -104,7 +110,7 @@ TalonPair::TalonPair(int motor, int ControlMode, bool inverted){
 		mc->SetInverted(true);
 	}
 	
-}
+};
 
 TalonPair::TalonPair(int motor, int ControlMode, float *limits){
 	mc = new TalonSRX(motor);
@@ -122,4 +128,22 @@ void TalonPair::INVERT(){
 	mc->SetInverted(!(mc->GetInverted()));
 
 	return;
+}
+void TalonPair::SWITCHMANUAL(){
+	isManual = !isManual;
+	return;
+}
+
+int TalonPair::getQuadVelocity(){
+	int quadVel = 0;
+	try{
+		quadVel = sc->GetQuadratureVelocity();
+	}
+	catch (exception e){
+		cout<<"Error reading from sensorCollection\nCheck encoder connection"<<endl;
+		quadVel = 0;
+	}
+
+	return(quadVel);
+
 }

@@ -24,10 +24,13 @@ find_package(SDL2 REQUIRED)
 include_directories("${PROJECT_SOURCE_DIR}/include")
 set(CMAKE_CXX_STANDARD 17)
 add_executable(example ${PROJECT_SOURCE_DIR}/example.cpp)
-add_executable(testbed ${PROJECT_SOURCE_DIR}/testbed.cpp)
 
 
 if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf") # Jetson TK1 / Pi
+	add_executable(testbed ${PROJECT_SOURCE_DIR}/testbed.cpp)
+	target_link_libraries(testbed ${SDL2_LIBRARIES})
+	target_link_libraries(testbed Threads::Threads)
+
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_Phoenix.a)
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCCI.a)
 	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixDiagnostics.a)
@@ -86,12 +89,6 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
 	TARGET_LINK_LIBRARIES(zedshit ${ZED_LIBS})
 
 else()
-	target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_Phoenix.a)
-	target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCCI.a)
-	target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixDiagnostics.a)
-	target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixPlatform_socketcan.a)
-	target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCanutils.a)
-	target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCore.a)
 	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_Phoenix.a)
 	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCCI.a)
 	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixDiagnostics.a)
@@ -110,6 +107,5 @@ target_link_libraries(example stdc++fs)
 target_link_libraries(example pthread)
 
 
-target_link_libraries(testbed ${SDL2_LIBRARIES})
-target_link_libraries(testbed Threads::Threads)
+
 
