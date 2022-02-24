@@ -66,6 +66,7 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
 	link_directories(${ZED_LIBRARY_DIR})
 	link_directories(${CUDA_LIBRARY_DIRS})
 	
+	
 
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_Phoenix.a)
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCCI.a)
@@ -79,7 +80,8 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
     target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixPlatform_socketcan.a)
     target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCanutils.a)
     target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCore.a)
-	target_include_directories(zedshit PRIVATE ${CMAKE_SOURCE_DIR})
+	target_include_directories(zedshit PUBLIC ${CMAKE_SOURCE_DIR})
+	target_link_libraries(zedshit pthread)
     if (LINK_SHARED_ZED)
 		SET(ZED_LIBS ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
 	else()

@@ -8,7 +8,6 @@
 #include <pthread.h>
 #include <SDL2/SDL.h> //Read joystick events
 //file system stuff
-#include <filesystem>
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
@@ -180,7 +179,9 @@ int main() {
 	// Comment out the call if you would rather use the automatically running diag-server, note this requires uninstalling diagnostics from Tuner. 
 	// c_SetPhoenixDiagnosticsStartTime(-1); // disable diag server, instead we will use the diag server stand alone application that Tuner installs
 
-	/* setup drive */	
+	/* setup drive */
+		
+	
 
 	while (true) {
 		

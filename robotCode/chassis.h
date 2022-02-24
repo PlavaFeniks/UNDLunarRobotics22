@@ -64,8 +64,11 @@ void chassis::PIVOT(int angle, double speed){
     
 }
 void chassis::setup(bool isManual){
-    __brght->INVERT();
-    __frght->INVERT();
+    //__brght->INVERT();
+    //__frght->INVERT();
+    
+    __bleft->INVERT();
+    __fleft->INVERT();
     if(isManual){
         __brght->SWITCHMANUAL();
         __frght->SWITCHMANUAL();
