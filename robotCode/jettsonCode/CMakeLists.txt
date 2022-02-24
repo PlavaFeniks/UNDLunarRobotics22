@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
-PROJECT(ZED_Tutorial_3)
+PROJECT(autonomy)
 
 option(LINK_SHARED_ZED "Link with the ZED SDK shared executable" ON)
 
