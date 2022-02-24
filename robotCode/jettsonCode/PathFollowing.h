@@ -12,9 +12,9 @@ void getTranslationImage(TransformationData* updateOrient) //sets position and a
 			auto state = zed.getPosition(zed_pose, REFERENCE_FRAME::WORLD);
 			if (state == POSITIONAL_TRACKING_STATE::OK)
 			{
-				x = updateOrient->tx=zed_pose.getTranslation().x/10f;
-				y = updateOrient->ty=zed_pose.getTranslation().y/10f;
-				z = updateOrient->tz=zed_pose.getTranslation().z/10f;
+				x = updateOrient->tx=zed_pose.getTranslation().x/10;
+				y = updateOrient->ty=zed_pose.getTranslation().y/10;
+				z = updateOrient->tz=zed_pose.getTranslation().z/10;
 				rx = updateOrient->rx = zed_pose.getEulerAngles(false).x;
 				ry = updateOrient->ry = zed_pose.getEulerAngles(false).y;
 				rz = updateOrient->rz = zed_pose.getEulerAngles(false).z;
