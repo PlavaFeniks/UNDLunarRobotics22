@@ -65,11 +65,11 @@ int main(int argc, char **argv)
 	
 	if (argc > 1 && argv[1][0] == '1')
 	{
-		zedGoal = {1,1,0,0,0,0};
+		zedGoal = {10,10,0,0,0,0};
 	}
-	else zedGoal = {0,1,0,0,0,0};
-	zedGoal = {10,10,0,0,0,0};
-	    //getCloudAndPlane();
+	else zedGoal = {0,10,0,0,0,0};
+	
+	//getCloudAndPlane();
 	//startNode = mapOfPit[0][0];
 	//endNode = mapOfPit[89][50];
 	//FindPath(startNode);
@@ -77,6 +77,7 @@ int main(int argc, char **argv)
 	
 	getTranslationImage(&zedCurrent);
 	zedCurrent = {0,0,0,0,0,0};
+	
 	determineAngleToGoal(zedCurrent, &zedGoal);
 	while(true)
 	{
