@@ -39,14 +39,11 @@ Camera zed;
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
-#include "PathFollowing.h"
+#include "PathFollowing.h" //contains code for following a path
+
 
 int main(int argc, char **argv)
 {
-	
-	initializeTesselatedMap();
-	initializeOccupancyMapXYZVal();
-	
 	// Set configuration parameters
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -62,15 +59,34 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     
-    //getCloudAndPlane();
+	initializeTesselatedMap();
+	initializeOccupancyMapXYZVal();
+	initializePositionalTracking();
+	
+	if (argc > 1 && argv[1][0] == '1')
+	{
+		zedGoal = {1,1,0,0,0,0};
+	}
+	else zedGoal = {0,1,0,0,0,0};
+	zedGoal = {10,10,0,0,0,0};
+	    //getCloudAndPlane();
 	//startNode = mapOfPit[0][0];
 	//endNode = mapOfPit[89][50];
 	//FindPath(startNode);
 	//cmdLineOccupancyMap();
+	
+	getTranslationImage(&zedCurrent);
+	zedCurrent = {0,0,0,0,0,0};
+	determineAngleToGoal(zedCurrent, &zedGoal);
 	while(true)
 	{
-		GetTranslationImage();
-		//GetTranslationIMU();
+		getTranslationImage(&zedCurrent);
+		if (getAngleDifference(zedCurrent, zedGoal) < 1)break;
+	}
+	while(true)
+	{
+		getTranslationImage(&zedCurrent);
+		if (getDistanceDifference(zedCurrent, zedGoal) <1) break;
 	}
 	
     // Close the camera

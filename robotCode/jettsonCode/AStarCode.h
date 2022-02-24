@@ -9,7 +9,7 @@ AStarNode* endNode;
 AStarNode* startNode;
 std::vector<AStarNode*>openNodes; //vector of input nodes
 
-struct //used for storing zed position
+struct TransformationData//used for storing zed position
 {
 	float tx;
 	float ty;
@@ -19,7 +19,7 @@ struct //used for storing zed position
 	float rx;
 	float ry;
 	float rz;
-} zedTr;
+} zedCurrent, zedGoal;
 
 class AStarNode
 {
