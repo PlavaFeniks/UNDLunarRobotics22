@@ -19,6 +19,7 @@ public:
     readSerial(char*);
     ~readSerial();
     string getSerial();
+    float *getSerialVals(int);
 };
 
 readSerial::readSerial(char* abosolutePath)
@@ -56,7 +57,7 @@ string readSerial::getSerial(){
     char read_buf;
     string outPutString;
     int n = read(fd, &read_buf, 1);
-    while(read_buf != ','){
+    while(read_buf != ',' and read_buf != ';'){
         outPutString += read_buf;
         n =  read(fd, &read_buf,1);
     } 
@@ -64,6 +65,16 @@ string readSerial::getSerial(){
     return(outPutString);
 
     
+
+}
+float * readSerial::getSerialVals(int value_count){
+    float * float_vals = (float*)(malloc(sizeof(float) * value_count));
+    for(int i = 0; i < value_count; i++){
+        float_vals[i] = stof(getSerial())
+    }
+    write(fd,'x',1);
+
+    return(float_vals);
 
 }
 
