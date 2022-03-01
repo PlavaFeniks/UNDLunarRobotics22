@@ -68,12 +68,12 @@ string readSerial::getSerial(){
 
 }
 float * readSerial::getSerialVals(int value_count){
+    write(fd,'x',1);
     float * float_vals = (float*)(malloc(sizeof(float) * value_count));
     for(int i = 0; i < value_count; i++){
         float_vals[i] = stof(getSerial())
     }
-    write(fd,'x',1);
-
+    
     return(float_vals);
 
 }
