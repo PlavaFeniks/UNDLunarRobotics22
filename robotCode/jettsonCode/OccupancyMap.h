@@ -212,6 +212,21 @@ void initializeOccupancyMapXYZVal()
 	}
 }
 
+/*
+ * Problem: each tile in the occupancy map is 10cm by 10cm, robot is bigger than that
+ * Solution: expand the not traversable parts of the occupancy map
+ * */
+void thiccOccupancymap(int thickenAmount)
+{
+	for (int i=HEIGHT-1; i>=0; i--)
+	{
+		for (int j=0; j<WIDTH; j++)
+		{
+			
+		}
+	}
+}
+
 void cmdLineOccupancyMap() //displays the occupancy map in cmdline
 {
 	cout << "start of map\n";

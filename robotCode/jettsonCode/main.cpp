@@ -29,6 +29,8 @@
 #define IMAGEWIDTH 1280 //x size of image
 #define IMAGEHEIGHT 720 //y size of image
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
+#define XJETSONRELATIVETOROBOT 1 //where the jetson is relative to the robot pov CENTIMETERS/10
+#define YJETSONRELATIVETOROBOT 1 //where the jetson is relative to the robot pov CENTIMETERS/10
 
 using namespace std;
 using namespace sl;
@@ -40,12 +42,13 @@ Camera zed;
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
 #include "PathFollowing.h" //contains code for following a path
-#include "../chassis.h"
+//#include "../chassis.h"
 
-chassis locomotion(false);
+//chassis locomotion(false);
 
 int main(int argc, char **argv)
 {
+	/* alex can you make the below code into a function call
 	// Set configuration parameters
 	std::string interface;
 	interface = "can0";
@@ -58,7 +61,7 @@ int main(int argc, char **argv)
 	
 	ctre::phoenix::unmanaged::FeedEnable(2000);	
 	locomotion.SETSPEED(.50, .50);
-	sleep(2);
+	sleep(2);*/
     
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -78,46 +81,16 @@ int main(int argc, char **argv)
 	initializeOccupancyMapXYZVal();
 	initializePositionalTracking();
 	
-	if (argc > 1 && argv[1][0] == '1')
-	{
-		zedGoal = {10,10,0,0,0,0};
-	}
-	else zedGoal = {0,10,0,0,0,0};
-	
 	//getCloudAndPlane();
 	//startNode = mapOfPit[0][0];
 	//endNode = mapOfPit[89][50];
 	//FindPath(startNode);
 	//cmdLineOccupancyMap();
-	
-	getTranslationImage(&zedCurrent);
-	zedCurrent = {0,0,0,0,0,0};
-	
-	determineAngleToGoal(zedCurrent, &zedGoal);
-	while(true)//periot
+	while(true)
 	{
 		getTranslationImage(&zedCurrent);
-		float angleDiff = getAngleDifference(zedCurrent, zedGoal);
-		if (angleDiff < 1)
-		{
-			locomotion.SETSPEED(0, 0);
-			break;
-		}
-		else if (zedGoal.rz - zedCurrent.rz > 0) locomotion.SETSPEED(-.40, .40);
-		else if (zedGoal.rz - zedCurrent.rz < 0) locomotion.SETSPEED(.40, -.40);
-		
 	}
-	while(true) //walking
-	{
-		getTranslationImage(&zedCurrent);
-		float distance = getDistanceDifference(zedCurrent, zedGoal);
-		if (distance<2)
-		{
-			locomotion.SETSPEED(0,0);
-			break;
-		}
-		else locomotion.SETSPEED(.20, .20);
-	}
+	turnMove(&zedCurrent, &zedGoal);
 	
     // Close the camera
     zed.close();
