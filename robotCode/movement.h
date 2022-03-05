@@ -1,6 +1,5 @@
 #define Phoenix_No_WPI // remove WPI dependencies
 #include <iostream>
-//#include <ctre/Phoenix.h>
 #include "ctre/Phoenix.h"
 #include "ctre/phoenix/platform/Platform.h"
 #include "ctre/phoenix/unmanaged/Unmanaged.h"
@@ -32,6 +31,7 @@ class TalonPair{
 	TalonPair(int, int, float *);
 	TalonPair(int, int);
 	TalonPair(int, int, bool);
+	double getVoltage();
 	int getQuadVelocity();
 	void INVERT();
 	void SWITCHMANUAL();
@@ -146,5 +146,17 @@ int TalonPair::getQuadVelocity(){
 	}
 
 	return(quadVel);
+
+}
+
+double TalonPair::getVoltage(){
+	double voltage;
+	try{
+		voltage = (*mc).GetMotorOutputVoltage();
+	}
+	catch (exception e){
+		cout<<"Could not read motor output voltage"<<endl;
+	}
+	return(voltage);
 
 }
