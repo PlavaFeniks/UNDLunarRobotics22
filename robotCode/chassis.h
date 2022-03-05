@@ -2,28 +2,29 @@
 
 class chassis
 {
-private:
-    TalonPair * __bleft;
-    TalonPair * __brght;
-    TalonPair * __fleft;
-    TalonPair * __frght;
-public:
-    chassis();
-    chassis(TalonPair*, TalonPair* , TalonPair*, TalonPair*);
-    void setup();
-    void SETSPEED(double, double);
-    void PIVOT(int, double);
-    ~chassis();
+    private:
+        TalonPair * __bleft;
+        TalonPair * __brght;
+        TalonPair * __fleft;
+        TalonPair * __frght;
+    public:
+        chassis(bool);
+        chassis(TalonPair*, TalonPair* , TalonPair*, TalonPair*);
+        void setup(bool);
+        void SETSPEED(double, double);
+        void PIVOT(int, double);
+        void SWITCHMANUAL();
+
 };
 
-chassis::chassis(){
+chassis::chassis(bool isManual){
     __bleft = new TalonPair(RearLeft);
     __brght = new TalonPair(RearRight);
     __frght = new TalonPair(FrontRight);
     __fleft = new TalonPair(FrontLeft);
-    setup();
+    setup(isManual);
     cout<<"Successfully created chassis control group"<<endl;
-}
+};
 chassis::chassis(TalonPair* b_left, TalonPair* b_rght , TalonPair* f_left, TalonPair* f_rght)
 {
     __bleft = b_left;
@@ -31,9 +32,9 @@ chassis::chassis(TalonPair* b_left, TalonPair* b_rght , TalonPair* f_left, Talon
     __fleft = f_left;
     __frght = f_rght;
 
-    setup();
+    setup(false);
 
-}
+};
 void chassis::SETSPEED(double _lSpeed, double _rspeed){
     __fleft->SETSPEED(_lSpeed);
     __frght->SETSPEED(_rspeed);
@@ -62,13 +63,14 @@ void chassis::PIVOT(int angle, double speed){
     return;
     
 }
-void chassis::setup(){
+void chassis::setup(bool isManual){
     __brght->INVERT();
     __frght->INVERT();
-}
-
-
-chassis::~chassis()
-{
-    cout<<"Traction Control object successfully destroyed\n";
+    if(isManual){
+        __brght->SWITCHMANUAL();
+        __frght->SWITCHMANUAL();
+        __bleft->SWITCHMANUAL();
+        __frght->SWITCHMANUAL();
+    }
+    return;
 }

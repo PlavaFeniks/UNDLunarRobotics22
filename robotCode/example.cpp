@@ -1,103 +1,65 @@
-#define Phoenix_No_WPI // remove WPI dependencies
-#include "ctre/Phoenix.h"
-#include "ctre/phoenix/platform/Platform.h"
-#include "ctre/phoenix/unmanaged/Unmanaged.h"
-#include "ctre/phoenix/cci/Unmanaged_CCI.h"
+//Input/output stuff
 #include <string>
 #include <iostream>
+#include <stdio.h>
 #include <chrono>
+//thread stuff
 #include <thread>
-#include <SDL2/SDL.h>
+#include <pthread.h>
+#include <SDL2/SDL.h> //Read joystick events
+//file system stuff
 #include <filesystem>
+#include <dirent.h>
+#include <fcntl.h>
+#include <fstream>
 #include <unistd.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <string>
-#include <fstream>
 #include <sys/types.h>
-#include <dirent.h>
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <stdio.h>
 #include <termios.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <chrono>
-#include <thread>
-#include <string.h>
-#include "movement.h"
+#include "chassis.h" //custom headers
+
+using namespace std;
+
+#define locoThresh .1
 #define upperDlim .7
 #define lowerDlim .0
 const float screwSpeed = 0.4;
-
-#define locoThresh .1
-#define minHeight -500
-#define maxHeight 500  
-
-using namespace std;
-using namespace ctre::phoenix;
-using namespace ctre::phoenix::platform;
-using namespace ctre::phoenix::motorcontrol;
-using namespace ctre::phoenix::motorcontrol::can;
-
+//define buttons and joysticks here
+enum Buttons{XBUTTON};
+enum Joystics{LEFTSTICK};
 //Declare Prototypes please
 void sleepApp(int ms);
+void fullStop();
+void setup();
+//Setup MotorController devices
+chassis Locomotion(true);
+TalonPair screw(5);
+TalonPair buckets(6);
+TalonPair hopper(7);
 
-//Declare filePointer//
-//FILE *outputCSV;
-
-
-
-/* make some talons for drive train */
-TalonPair screwDriver(5);
-TalonSRX diggerDrive(6);
-TalonSRX talLeft(3);
-TalonSRX talRght(4);
-//TalonSRX screwDriver(5);
-TalonSRX hopper(7);
-TalonSRX rear_talLeft(1);
-TalonSRX rear_talRght(2);
-SensorCollection diggSensor(diggerDrive);
-SensorCollection r_tL(rear_talLeft);
-SensorCollection r_tR(rear_talRght);
-SensorCollection tL(talLeft);
-SensorCollection tR(talRght);
-//SensorCollection screw_log(screwDriver);
-SensorCollection hop(hopper);
-
+//global vars
 double diggerDSpeed;
-int screwHeight = 0;
 bool logging = false;
 
+void setup(){
+	//Runs once, sets TalonPairs to manual
+	screw.SWITCHMANUAL();
+	buckets.SWITCHMANUAL();
+	hopper.SWITCHMANUAL();
+}
 
-
-void initDrive()
-{
-	
+void fullStop(){
+	//stops all motorcontrollers
+	double stop = 0.0;
+	Locomotion.SETSPEED(stop,stop);
+	screw.SETSPEED(stop);
+	buckets.SETSPEED(stop);
+	hopper.SETSPEED(stop);
 }
-void invertDrive(TalonSRX* sender)
-{
-	if(sender->GetInverted()){
-		sender->SetInverted(false);
-		return;
-	}
-	sender->SetInverted(true);
-	
-}
-void screwDrive(double speed){
-	
-	//screwDriver.Set(ControlMode::PercentOutput,speed);
-	screwDriver.SETSPEED(speed);
-	return;
-}
-void hoppinout(double speed){
-	
-	hopper.Set(ControlMode::PercentOutput,speed);
-	return;
-}
+//move to deposition headerfile
 void stepDigger(double stepFunc){
+	//increases global digging speed
 	double tSpeed = 0;
 	tSpeed = diggerDSpeed + stepFunc;
 	if ((tSpeed >= upperDlim) or (tSpeed<=lowerDlim)){
@@ -112,46 +74,13 @@ void stepDigger(double stepFunc){
 		
 	}
 }
-void setDiggerDrive(){
-	diggerDrive.Set(ControlMode::PercentOutput, diggerDSpeed);
-
-	std::cout<<typeid(diggerDrive).name()<<std::endl;
-	std::cout<<diggerDrive.GetSensorCollection().GetQuadraturePosition()<<"\nCOCKNBALLTORTURE\n";
-	std::cout<<diggerDrive.GetMotorOutputVoltage()<<"\n";
-	return;
-}
-void ldrive(double fwd, double turn)
-{
-	double left = fwd - turn;
-	talLeft.Set(ControlMode::PercentOutput, left);
-	rear_talLeft.Set(ControlMode::PercentOutput, left);
-	
-	
-}
-
-void rdrive(double fwd, double turn)
-{
-	
-	double rght = fwd + turn; /* positive turn means turn robot LEFT */
-
-
-	rear_talRght.Set(ControlMode::PercentOutput, rght);
-	talRght.Set(ControlMode::PercentOutput, rght);
-
-}
-void drive(double fwd){
-		
-	
-	
-}
-void sleepApp(int ms)
-{
+void sleepApp(int ms){
+	//sleep but in milleseconds
 	this_thread::sleep_for(chrono::milliseconds(ms));
 }
-/*
-
-void *loggingThread2(void *threadData)
-{
+/* move to ampSerial
+void *loggingThread2(void *threadData){
+	//thread for logging
 	char aboslute_path[] = "/dev/ttyACM0";
 	int serial_fd;
     serial_fd = open(aboslute_path, O_RDONLY|O_NOCTTY); //O_NONBLOCK
@@ -237,16 +166,10 @@ void *loggingThread2(void *threadData)
 */
 
 int main() {
-	/* don't bother prompting, just use can0 */
+	pthread_t myThread;	
+	setup();
 
-	
-	pthread_t myThread;
-	
-	//pthread_join(myThread, NULL);
-	
 	std::string interface;
-	
-	//std::cin >> interface;
 	interface = "can0";
 	int temp; 
 	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
@@ -257,35 +180,27 @@ int main() {
 	// Comment out the call if you would rather use the automatically running diag-server, note this requires uninstalling diagnostics from Tuner. 
 	// c_SetPhoenixDiagnosticsStartTime(-1); // disable diag server, instead we will use the diag server stand alone application that Tuner installs
 
-	/* setup drive */
-	initDrive();
-	
+	/* setup drive */	
 
 	while (true) {
 		
-		ldrive(0, 0);
-		rdrive(0, 0);
+		fullStop();
 		diggerDSpeed = .25;
-		
-	
-
 		// wait for gamepad
 		printf("Waiting for gamepad...\n");
 		while (true) {
-			/* SDL seems somewhat fragile, shut it down and bring it up */
 			SDL_Quit();
             SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1"); //so Ctrl-C still works
 			SDL_Init(SDL_INIT_JOYSTICK);
 
 			/* poll for gamepad */
 			int res = SDL_NumJoysticks();
-			if (res > 0) { break; }
 			if (res < 0) { printf("Err = %i\n", res); }
+			else break;
 
-			/* yield for a bit */
 			sleepApp(20);
 		}
-		printf("Waiting for gamepad...Found one\n");
+		printf("Gamepad found\n");
 
 		// Open the joystick for reading and store its handle in the joy variable
 		SDL_Joystick *joy = SDL_JoystickOpen(0);
@@ -312,109 +227,88 @@ int main() {
 
 		// Keep reading the state of the joystick in a loop
 		while (true) {
-			cout<<"WHY IS EN FUCKING DUMB\n";
 			/* poll for disconnects or bad things */
 			//printf("WHAT THE FUCK");
 			SDL_Event event;
+			//always default to stopping motors
+			fullStop();
 			if (SDL_PollEvent(&event)) {
 				if (event.type == SDL_QUIT) { break; }
 				if (event.jdevice.type == SDL_JOYDEVICEREMOVED) { break; }
 			}
-
 			/* grab some stick values */
 			double y = ((double)SDL_JoystickGetAxis(joy, 0)) / -32767.0;
 			double turn = ((double)SDL_JoystickGetAxis(joy, 1)) / -32767.0;
 			double ry = ((double)SDL_JoystickGetAxis(joy, 3)) / -32767.0;
 			double rturn = ((double)SDL_JoystickGetAxis(joy, 4)) / -32767.0;
-			diggerDrive.Set(ControlMode::PercentOutput, 0.00);
 
 			for (int i = 0; i< num_buttons; i++){
 				if (SDL_JoystickGetButton(joy,i)){
 					cout<<"This is button " << i << "\n";
 				}
 			}
-			
-			//std::cout<<ry<<std::endl;
-			//ctre::phoenix::unmanaged::FeedEnable(100);
-			ldrive(0.00, 0.00);
-			rdrive(0.00, 0.00);
-			screwDrive(0);
-			hoppinout(0.00);
-			if(abs(turn) > locoThresh or abs(rturn) > locoThresh){
-			//std::cout<< "ThisShouldBeMoving"<<std::endl;
-			ldrive(y, turn);
-			rdrive(ry, rturn);
-			}
-			
-			if ((double)SDL_JoystickGetAxis(joy,2) > 0){
-			setDiggerDrive();
-			std::cout<<"WHY AM I RUNNING HOLY FUCK JESUS FUCKING CHRIST\n";
-			
-			}
-			if ((double)SDL_JoystickGetAxis(joy,5) > 0){
-				hoppinout(.50);
-				std::cout<<"This Code is Dog Shit"<<std::endl;
-			}
-			//double q = ((double)SDL_JoystickGetAxis(joy,2))  / -32767.0;
-			//drive(q);
-
 			/* [SAFETY] only enable drive if top left shoulder button is held down */
 			if (SDL_JoystickGetButton(joy, 4)) {
 				ctre::phoenix::unmanaged::FeedEnable(100);
 			}
-			else if (SDL_JoystickGetButton(joy, 5)) {
-				invertDrive(&diggerDrive);
-				invertDrive(&hopper);
-				sleepApp(500);
-				
+
+			if(abs(turn) > locoThresh or abs(rturn) > locoThresh){
+				Locomotion.SETSPEED(y-turn, ry-rturn);
 			}
-			
-			
+
+			if ((double)SDL_JoystickGetAxis(joy,2) > 0){
+				buckets.SETSPEED(diggerDSpeed);
+			}
+
+			if ((double)SDL_JoystickGetAxis(joy,5) > 0){
+				hopper.SETSPEED(.50);
+			}
+
+			else if (SDL_JoystickGetButton(joy, 5)) {
+				hopper.INVERT();
+				buckets.INVERT();
+				sleepApp(500);
+			}
+			//Set up/stop logging
 			if (SDL_JoystickGetButton(joy,2)){
-				
-				//cout<< n<<endl;
 				if (!logging){
 				logging = true;
 				//pthread_create(&myThread,NULL,loggingThread2,NULL);
-				sleep(5);
+				sleep(2);
 				}
 			}
 			else if(SDL_JoystickGetButton(joy,3)){
 				if(logging){
 				logging = false;
-				cout<<"EYO THE LOGGING THREAD HAS DONE BEEN KILLED\n";
+				cout<<"Requesting Logging Thread to stop. Please wait\n";
 				if(pthread_join(myThread, NULL) == 0)
-				cout<<"Thread has successfully been joined, no longer a zombozo\n";
-				sleep(5);
+				cout<<"Thread has successfully been joined, no longer a zombie\n";
+				sleep(2);
+				}
+				else{
+					cout<<"Oops. Something went wrong\n";
+					perror("");
 				}
 			}
 		
 			if (SDL_JoystickGetHat(joy,0) == SDL_HAT_UP){
-				std::cout<<"EVERYBODY WALK THE DINOSAUR"<<std::endl;
 				stepDigger(.05);
 			}
 			else if (SDL_JoystickGetHat(joy,0) == SDL_HAT_DOWN){
-				std::cout<<"EVERYBODY Get on the floor"<<std::endl;
 				stepDigger(-.05);
 			}
 			else if (SDL_JoystickGetHat(joy,0) == SDL_HAT_LEFT){
-				std::cout<<"EVERYBODY WALK THE DINOSAUR"<<std::endl;
-				screwDrive(screwSpeed);
+				screw.SETSPEED(screwSpeed);
 			}
 			else if (SDL_JoystickGetHat(joy,0) == SDL_HAT_RIGHT){
-				std::cout<<"EVERYBODY Get on the floor"<<std::endl;
-				screwDrive(-(screwSpeed));
+				screw.SETSPEED(-(screwSpeed));
 			}
-			
-			//else if (fix this bitch later) basically just use right bumper as a toggle or something. 
-
 			/* loop yield for a bit */
 			sleepApp(20);
 		}
 
 		/* we've left the loop, likely due to gamepad disconnect */
-		ldrive(0, 0);
-		rdrive(0, 0);
+		fullStop();
 		SDL_JoystickClose(joy);
 		printf("gamepad disconnected\n");
 	}
