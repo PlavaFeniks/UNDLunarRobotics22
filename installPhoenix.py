@@ -20,7 +20,7 @@ def main() -> None:
     home = Path("/home")
     user = getuser()
     download_dir = home / user / "Downloads"
-    install_dir = Path("/usr/lib/ctre")
+    install_dir = Path("/usr/include/ctre")
 
     phoenix_library = download_dir / "Phoenix-Linux-SocketCAN-Example" / "include"
     phoenix_obj_lib = download_dir / "Phoenix-Linux-SocketCAN-Example" / "lib"

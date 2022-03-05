@@ -13,7 +13,7 @@ This executable is designed to facillitate the development and testing of variou
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <wriringPi.h>
+//#include <wiringPi.h>
 
 
 #define LSwitch 0 // Switch repersenting digger is fully lowered
