@@ -40,11 +40,26 @@ Camera zed;
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
 #include "PathFollowing.h" //contains code for following a path
+#include "../chassis.h"
 
+chassis locomotion(false);
 
 int main(int argc, char **argv)
 {
 	// Set configuration parameters
+	std::string interface;
+	interface = "can0";
+	int temp; 
+	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
+		perror("");
+		std::_Exit(0);
+	}
+	sleep(10);
+	
+	ctre::phoenix::unmanaged::FeedEnable(2000);	
+	locomotion.SETSPEED(.50, .50);
+	sleep(2);
+    
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
     init_parameters.coordinate_units = UNIT::CENTIMETER; // Use millimeter units (for depth measurements)
@@ -79,15 +94,29 @@ int main(int argc, char **argv)
 	zedCurrent = {0,0,0,0,0,0};
 	
 	determineAngleToGoal(zedCurrent, &zedGoal);
-	while(true)
+	while(true)//periot
 	{
 		getTranslationImage(&zedCurrent);
-		if (getAngleDifference(zedCurrent, zedGoal) < 1)break;
+		float angleDiff = getAngleDifference(zedCurrent, zedGoal);
+		if (angleDiff < 1)
+		{
+			locomotion.SETSPEED(0, 0);
+			break;
+		}
+		else if (zedGoal.rz - zedCurrent.rz > 0) locomotion.SETSPEED(-.40, .40);
+		else if (zedGoal.rz - zedCurrent.rz < 0) locomotion.SETSPEED(.40, -.40);
+		
 	}
-	while(true)
+	while(true) //walking
 	{
 		getTranslationImage(&zedCurrent);
-		if (getDistanceDifference(zedCurrent, zedGoal) <1) break;
+		float distance = getDistanceDifference(zedCurrent, zedGoal);
+		if (distance<2)
+		{
+			locomotion.SETSPEED(0,0);
+			break;
+		}
+		else locomotion.SETSPEED(.20, .20);
 	}
 	
     // Close the camera
