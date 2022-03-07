@@ -68,8 +68,6 @@ string readSerial::getSerial(){
 
 }
 float * readSerial::getSerialVals(int value_count){
-    char sendval = 'x';
-    cout<<write(fd,&sendval,1)<<endl;
     float * float_vals = (float*)(malloc(sizeof(float) * value_count));
     for(int i = 0; i < value_count; i++){
         float_vals[i] = stof(getSerial());
