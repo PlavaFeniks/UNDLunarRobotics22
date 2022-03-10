@@ -115,7 +115,6 @@ void occupancyMap()
 		//	perform outlier stuff
 		//exit
 	
-	
 }
 
 
@@ -123,7 +122,6 @@ void occupancyMap()
 //affects global variables
 void getCloudAndPlane()
 {
-	double cellSize = .1; //meters
 	// Set runtime parameters after opening the camera
     RuntimeParameters runtime_parameters;
     runtime_parameters.sensing_mode = SENSING_MODE::STANDARD; // Use STANDARD sensing mode
@@ -194,6 +192,7 @@ void getCloudAndPlane()
 		occupancyMap();
 		k += 1;       
 	}
+	cout << "point cloud defined\n";
 }
 
 void initializeOccupancyMapXYZVal()
@@ -218,10 +217,30 @@ void initializeOccupancyMapXYZVal()
  * */
 void thiccOccupancymap(int thickenAmount)
 {
-	for (int i=HEIGHT-1; i>=0; i--)
+	for (int i=HEIGHT-1; i>=0; i--) //y of map
 	{
-		for (int j=0; j<WIDTH; j++)
+		for (int j=0; j<WIDTH; j++) //x of map
 		{
+			
+			bool backout = false;
+			if (mapOfPit[i][j]->isTraversable == false) continue;
+			
+			for (int r=i-thickenAmount; r<=i+thickenAmount; r++) //y around map
+			{
+				for (int q=j-thickenAmount; q<=j+thickenAmount; q++)
+				{
+					
+					if (q < 0 or q > WIDTH-1 or r < 0 or r > HEIGHT-1) continue;
+					if (mapOfPit[r][q]->Pocc < OccThresh)
+					{
+						mapOfPit[i][j]->isTraversable = false;
+						backout = true;
+						break;
+					}
+				}
+				if (backout ==true) break;
+			}
+			
 			
 		}
 	}
@@ -235,11 +254,12 @@ void cmdLineOccupancyMap() //displays the occupancy map in cmdline
 		for (int j=0; j<WIDTH; j++)
 		{
 			// /*
-			if (mapOfPit[i][j]->child != NULL) cout << "-";
-			else if (mapOfPit[i][j] == endNode) cout << "x";
+			if (mapOfPit[i][j]->child != NULL) cout << "\x1B[33m-";
+			else if (mapOfPit[i][j] == endNode) cout << "\x1B[94mx";
 			else if (mapOfPit[i][j]->Nobs==0) cout << " "; //if never observed				
 			else if (mapOfPit[i][j]->isTraversable) cout << " ";//if traversable
-			else cout << "1"; //if not traversable
+			else cout << "\x1B[91m1"; //if not traversable
+			cout << "\033[0m";
 		}
 		cout << "\n";
 	}

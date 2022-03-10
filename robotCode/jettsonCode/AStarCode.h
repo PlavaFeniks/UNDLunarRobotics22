@@ -1,5 +1,3 @@
-
-
 class AStarNode;
 int calculateDistance(int x, int y, AStarNode* targetNode);
 int calculateDistance(int x, int y, int targetX, int targetY);
@@ -96,11 +94,16 @@ void initializeTesselatedMap()
 	}
 }
 
-void definePath(AStarNode* endNode) //define path from startNode to EndNode
+void definePath(AStarNode* currentNode) //define path from startNode to EndNode
 {
-	if (endNode->parent == NULL) return;
-	endNode->parent->child = endNode;
-	definePath(endNode->parent);
+	if (currentNode->parent == NULL)
+	{
+		if (currentNode == startNode) cout << "path found\n";
+		else cout <<"path not found\n";
+		return;
+	}
+	currentNode->parent->child = currentNode;
+	definePath(currentNode->parent);
 }
 void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node must be defined
 {
@@ -113,8 +116,8 @@ void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node mu
 		//sets current to node in openNodes with lowest fCost
 		for (int i=0; i<(int)openNodes.size(); i++)
 		{
-			if (current == NULL) {current = openNodes[i]; index = i; continue; }
-			if (openNodes[i]->fCost < current->fCost){current = openNodes[i]; index = i;}
+			if (current == NULL) {current = openNodes[i]; index = i;}
+			else if (openNodes[i]->fCost < current->fCost){current = openNodes[i]; index = i;}
 		}
 		if (current->x == endNode->x and current->y == endNode->y) break;
 		current->isClose = true;
@@ -139,13 +142,16 @@ void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node mu
 		if (y>0) neighbors[6] = mapOfPit[y-1][x];
 		if (y<HEIGHT-1) neighbors[7] = mapOfPit[y+1][x];
 		
-		
 		for (int i=0; i<8; i++)
 		{
+			
 			AStarNode* neighbor = neighbors[i];
 			if (neighbor == NULL) continue; //go to next neighbor if current one doesnt exist
+			//if (neighbor->isTraversable == NULL or neighbor->isClose == NULL) continue;
 			if (neighbor->isTraversable == false or neighbor->isClose == true) continue; //go to next neighbor if current neighbor is not traversable or closed
+		
 			int gCost = current->gCost + calculateDistance(current->x, current->y, neighbor->x, neighbor->y); //add gCost from parent and get distance from child to parent
+		
 			if (neighbor->parent == NULL)
 			{
 				neighbor->parent = current;
@@ -157,9 +163,14 @@ void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node mu
 				neighbor->parent = current;
 				neighbor->setGCost(gCost, endNode);
 			}
+			
 		}
+		
 		openNodes.erase(openNodes.begin() + index);
-	}
+		
+			
+		}
+	cout << "a* complete\n";
 	definePath(endNode);
 }
 

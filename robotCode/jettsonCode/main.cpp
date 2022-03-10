@@ -29,8 +29,10 @@
 #define IMAGEWIDTH 1280 //x size of image
 #define IMAGEHEIGHT 720 //y size of image
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
-#define XJETSONRELATIVETOROBOT 1 //where the jetson is relative to the robot pov CENTIMETERS/10
-#define YJETSONRELATIVETOROBOT 1 //where the jetson is relative to the robot pov CENTIMETERS/10
+#define XJETSONRELATIVETOROBOT -3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
+#define YJETSONRELATIVETOROBOT 3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
+#define PI 3.14159265 //the latest recipe
+
 
 using namespace std;
 using namespace sl;
@@ -42,13 +44,17 @@ Camera zed;
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
 #include "PathFollowing.h" //contains code for following a path
-//#include "../chassis.h"
+#include "../chassis.h"
 
-//chassis locomotion(false);
-
+chassis locomotion(false);
+/*
+ * TODO: drive backwards, thick map, cmd arguements for displaying map
+ * 
+ * 
+ * */
+bool onlyGenerateMap = false;
 int main(int argc, char **argv)
 {
-	/* alex can you make the below code into a function call
 	// Set configuration parameters
 	std::string interface;
 	interface = "can0";
@@ -59,9 +65,7 @@ int main(int argc, char **argv)
 	}
 	sleep(10);
 	
-	ctre::phoenix::unmanaged::FeedEnable(2000);	
-	locomotion.SETSPEED(.50, .50);
-	sleep(2);*/
+	
     
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -77,20 +81,37 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     
+    //initialization
 	initializeTesselatedMap();
 	initializeOccupancyMapXYZVal();
 	initializePositionalTracking();
 	
-	//getCloudAndPlane();
-	//startNode = mapOfPit[0][0];
-	//endNode = mapOfPit[89][50];
-	//FindPath(startNode);
+	//generate map
+	getCloudAndPlane();
+	startNode = mapOfPit[0][0];
+	endNode = mapOfPit[89][50];
+	FindPath(startNode);
+	
+	
+	//generate with thickening
+	//thiccOccupancymap(2);
 	//cmdLineOccupancyMap();
+	
+	if (argc > 1)
+	{
+		cmdLineOccupancyMap();
+		// Close the camera
+		zed.close();
+		return EXIT_SUCCESS;	
+	}
+	
+	//do stuff
 	while(true)
 	{
 		getTranslationImage(&zedCurrent);
+		followPathForwards(startNode, &zedCurrent, &zedGoal);
+		followPathBackwards(endNode, &zedCurrent, &zedGoal); 
 	}
-	turnMove(&zedCurrent, &zedGoal);
 	
     // Close the camera
     zed.close();

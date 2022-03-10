@@ -1,7 +1,6 @@
-#define PI 3.14159265
 //https://github.com/stereolabs/zed-examples/blob/master/positional%20tracking/cpp/src/main.cpp
 
-void getTranslationImage(TransformationData* updateOrient) //sets position and angle change using images
+void getTranslationImage(TransformationData* updateOrient, bool driveForward = true) //sets position and angle change using images
 {   
 	float x,y,z;
 	float rx, ry, rz;
@@ -23,11 +22,15 @@ void getTranslationImage(TransformationData* updateOrient) //sets position and a
 				//orientation set for the robot's position
 				float theta, gamma, alpha = 0;
 				theta = rz;
-				alpha = abs(atan2(YJETSONRELATIVETOROBOT, XJETSONRELATIVETOROBOT)* 180 / PI - 90);
+				alpha = atan2(YJETSONRELATIVETOROBOT, XJETSONRELATIVETOROBOT)* 180 / PI;
 				gamma = alpha + theta;
 				
-				updateOrient->tx = x-cos((gamma+90) / 180 * PI);
-				updateOrient->ty = y-sin((gamma+90) / 180 * PI);
+		cout << "OG X: " << updateOrient->tx << 
+		" Y: " << updateOrient->ty << " ";
+				
+				float distanceToCenterofRobot = sqrt(pow(XJETSONRELATIVETOROBOT, 2) + pow(YJETSONRELATIVETOROBOT, 2));
+				updateOrient->tx = x-distanceToCenterofRobot*cos((gamma) / 180 * PI);
+				updateOrient->ty = y-distanceToCenterofRobot*sin((gamma) / 180 * PI);
 				
 				//cout << zed_pose.getEulerAngles(false).x << " " << zed_pose.getEulerAngles(false).y << " " << zed_pose.getEulerAngles(false).z << "\n";
 				//cout << setprecision(3) << zed_pose.getTranslation().x << " " <<  << " " <<zed_pose.getTranslation().z << "\n";
@@ -44,6 +47,7 @@ void getTranslationImage(TransformationData* updateOrient) //sets position and a
 			}
 		}
 	}
+	if (!driveForward) updateOrient->rz = updateOrient->rz-180;
 	return;
 }
 
@@ -110,7 +114,7 @@ void determineAngleToGoal(TransformationData current, TransformationData* goalSt
 float getAngleDifference(TransformationData current, TransformationData goalState) //gets angle that robot needs to rotate
 {
 	float angleDifference = goalState.rz - current.rz;
-	cout << angleDifference << "\n";
+	//cout << angleDifference << "\n";
 	return angleDifference;
 }
 
@@ -120,45 +124,124 @@ float getDistanceDifference(TransformationData current, TransformationData goalS
 	float adjustGoaly = goalState.ty - current.ty;
 	
 	float distance = sqrt(pow(adjustGoalx, 2) + pow(adjustGoaly, 2));
-	cout << distance << "\n";
+	//cout << distance << "\n";
 	return distance;
 }
 
-void turnMove(TransformationData* current, TransformationData* goalState) //robot will turn and move towards desired location
+void turnMoveForward(TransformationData* current, TransformationData* goalState) //robot will turn and move towards desired location
 {
 	//find initial angle
 	getTranslationImage(current);
 	determineAngleToGoal(*current, goalState);
 	
 	float previousAngle, previousDistance = -1;
+	cout << "rotating\n";
 	while(true)//periot
 	{
 		getTranslationImage(current);
 		float angleDiff = getAngleDifference(*current, *goalState);
-		if (abs(angleDiff) < 1 or previousAngle < abs(angleDiff)+.5)
+		if (abs(angleDiff) < 1)
 		{
-			//locomotion.SETSPEED(0, 0);
+			cout << "hit target angle, leftover" << angleDiff << "\n";
+			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0);// locomotion.SETSPEED(-.40, .40);
-		else if (angleDiff < 0);// locomotion.SETSPEED(.40, -.40);
+		else if (previousAngle < abs(angleDiff)+.5)
+		{
+			cout << "overshot angle by " << angleDiff << "\n";
+		}
+		else if (angleDiff > 0); locomotion.SETSPEED(-.40, .40);
+		else if (angleDiff < 0); locomotion.SETSPEED(.40, -.40);
 		previousAngle = abs(angleDiff);
 		
 	}
+	cout << "moving\n";
 	while(true)//walking
 	{
 		getTranslationImage(current);
 		float distance = getDistanceDifference(*current, *goalState);
-		if (distance<2 or previousDistance < distance + .5)
+		if (distance<2)
 		{
-			//locomotion.SETSPEED(0,0);
+			cout << "hit target angle, leftover" << distance << "\n";
+			locomotion.SETSPEED(0,0);
 			break;
 		}
-		else;//locomotion.SETSPEED(.20, .20);
+		else if (previousDistance < distance + .5)
+		{
+			cout << "overshot distance by " << distance << "\n";
+			break;
+		}
+		else;locomotion.SETSPEED(.20, .20);
 		previousDistance = distance;
 	}
 }
-void followPath(AStarNode* startingNode, TransformationData* current, TransformationData* goalState)
+void followPathForwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState) //goes from start to end ndoe
+{
+	AStarNode* currentNode = startNode;
+	
+	if (currentNode == NULL) return;
+	
+	while(currentNode != NULL)
+	{
+		AStarNode* nextNode = currentNode->child;
+		
+		goalState->tx = nextNode->x;
+		goalState->ty = nextNode->y;
+		
+		turnMoveForward(current, goalState);
+		currentNode = nextNode;
+	}
+}
+
+//------------------------------------backwards
+void turnMoveBackwards(TransformationData* current, TransformationData* goalState) //robot will turn and move towards desired location
+{
+	//find initial angle
+	getTranslationImage(current, false);
+	determineAngleToGoal(*current, goalState);
+	
+	float previousAngle, previousDistance = -1;
+	cout << "rotating\n";
+	while(true)//periot
+	{
+		getTranslationImage(current, false);
+		float angleDiff = getAngleDifference(*current, *goalState);
+		if (abs(angleDiff) < 1)
+		{
+			cout << "hit target angle, leftover" << angleDiff << "\n";
+			locomotion.SETSPEED(0, 0);
+			break;
+		}
+		else if (previousAngle < abs(angleDiff)+.5)
+		{
+			cout << "overshot angle by " << angleDiff << "\n";
+		}
+		else if (angleDiff > 0);locomotion.SETSPEED(-.40, .40);
+		else if (angleDiff < 0);locomotion.SETSPEED(.40, -.40);
+		previousAngle = abs(angleDiff);
+		
+	}
+	cout << "moving\n";
+	while(true)//walking
+	{
+		getTranslationImage(current, false);
+		float distance = getDistanceDifference(*current, *goalState);
+		if (distance<2)
+		{
+			cout << "hit target distance, leftover" << distance << "\n";
+			locomotion.SETSPEED(0,0);
+			break;
+		}
+		else if (previousDistance < distance + .5)
+		{
+			cout << "overshot distance by " << distance << "\n";
+			break;
+		}
+		else;locomotion.SETSPEED(-.20, -.20);
+		previousDistance = distance;
+	}
+}
+void followPathBackwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState) //goes from start to end ndoe
 {
 	AStarNode* currentNode = startNode;
 	
@@ -168,15 +251,11 @@ void followPath(AStarNode* startingNode, TransformationData* current, Transforma
 	{
 		AStarNode* nextNode = currentNode->parent;
 		
-		current->tx = currentNode->x;
-		current->ty = currentNode->y;
-		
 		goalState->tx = nextNode->x;
 		goalState->ty = nextNode->y;
 		
-		turnMove(current, goalState);
+		turnMoveBackwards(current, goalState);
 		currentNode = nextNode;
-		
 	}
 }
 
