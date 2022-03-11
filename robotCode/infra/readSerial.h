@@ -67,6 +67,7 @@ string readSerial::getSerial(){
     cout<<"semicolon Found"<<endl;
     }
     return(outPutString);
+    cout<<"yes";
 
     
 
