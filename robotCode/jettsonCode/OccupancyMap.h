@@ -225,13 +225,18 @@ void thiccOccupancymap(int thickenAmount)
 			bool backout = false;
 			if (mapOfPit[i][j]->isTraversable == false) continue;
 			
-			for (int r=i-thickenAmount; r<=i+thickenAmount; r++) //y around map
+			for (int r=-thickenAmount; r<=thickenAmount; r++) //y around map
 			{
-				for (int q=j-thickenAmount; q<=j+thickenAmount; q++)
+				for (int q=-thickenAmount; q<=thickenAmount; q++)
 				{
+					if (q==0 and r == 0) continue;
+					int newY = i+q;
+					int newX = j+r;
 					
-					if (q < 0 or q > WIDTH-1 or r < 0 or r > HEIGHT-1) continue;
-					if (mapOfPit[r][q]->Pocc < OccThresh)
+					if (newX < 0 or newX > WIDTH-1 or newY < 0 or newY > HEIGHT-1) continue;
+					
+					
+					if (mapOfPit[newY][newX]->Pocc < OccThresh)
 					{
 						mapOfPit[i][j]->isTraversable = false;
 						backout = true;
@@ -240,8 +245,6 @@ void thiccOccupancymap(int thickenAmount)
 				}
 				if (backout ==true) break;
 			}
-			
-			
 		}
 	}
 }
@@ -255,8 +258,7 @@ void cmdLineOccupancyMap() //displays the occupancy map in cmdline
 		{
 			// /*
 			if (mapOfPit[i][j]->child != NULL) cout << "\x1B[33m-";
-			else if (mapOfPit[i][j] == endNode) cout << "\x1B[94mx";
-			else if (mapOfPit[i][j]->Nobs==0) cout << " "; //if never observed				
+			else if (mapOfPit[i][j] == endNode) cout << "\x1B[94mx";			
 			else if (mapOfPit[i][j]->isTraversable) cout << " ";//if traversable
 			else cout << "\x1B[91m1"; //if not traversable
 			cout << "\033[0m";
