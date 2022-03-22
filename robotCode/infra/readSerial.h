@@ -38,13 +38,13 @@ readSerial::readSerial(char* abosolutePath)
         printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
     }   
     
-    //cfmakeraw(&tty);
+    cfmakeraw(&tty);
 
     cfsetspeed(&tty,B115200);
     tty.c_cflag |= CS8;
     tty.c_lflag |=(CLOCAL| CREAD);
     tty.c_iflag &= ~(IXOFF|IXON);
-    tty.c_cc[VMIN] = 2;
+    tty.c_cc[VMIN] = 1;
     tty.c_cc[VTIME] = 0;
     
     
@@ -67,7 +67,6 @@ string readSerial::getSerial(){
     cout<<"semicolon Found"<<endl;
     }
     return(outPutString);
-    cout<<"yes";
 
     
 
