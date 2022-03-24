@@ -168,7 +168,7 @@ void followPathForwards(AStarNode* startingNode, TransformationData* current, Tr
 	while(currentNode != NULL)
 	{
 		AStarNode* nextNode = currentNode->child;
-		
+		if (nextNode == NULL) break;		
 		goalState->tx = nextNode->x;
 		goalState->ty = nextNode->y;
 		
@@ -217,14 +217,14 @@ void followPathBackwards(AStarNode* startingNode, TransformationData* current, T
 {
 	cout << "moving backwards\nSleeping for 5 seconds\n";
 	sleep(5);
-	AStarNode* currentNode = startNode;
+	AStarNode* currentNode = startingNode;
 	
-	if (currentNode == NULL) return;
+	if (currentNode == NULL) {cout << "big bad error\n";return;}
 	
 	while(currentNode != NULL)
 	{
 		AStarNode* nextNode = currentNode->parent;
-		
+		if (nextNode ==NULL) {cout << "done\n";break;}
 		goalState->tx = nextNode->x;
 		goalState->ty = nextNode->y;
 		

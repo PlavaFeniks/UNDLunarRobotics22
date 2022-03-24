@@ -39,6 +39,8 @@ using namespace sl;
 
 // Create a ZED camera object
 Camera zed;
+
+//initializations for chassis
 //#include "chassis.h"
 //chassis locomotion(false);
 
@@ -46,12 +48,15 @@ Camera zed;
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
 #include "PathFollowing.h" //contains code for following a path
-/*
- * TODO: drive backwards, thick map, cmd arguements for displaying map
- * 
- * 
- * */
-bool onlyGenerateMap = false;
+
+void makeRowIntraversable()
+{
+	for (int i=0; i<WIDTH; i++)
+	{
+		mapOfPit[15][i]->isTraversable = false;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	/*
@@ -89,25 +94,29 @@ int main(int argc, char **argv)
 	
 	//generate map
 	getCloudAndPlane();
+	thiccOccupancymap(3);
+	cmdLineOccupancyMap();
 	startNode = mapOfPit[0][0];
 	endNode = mapOfPit[30][0];
+	makeRowIntraversable();
 	FindPath(startNode);
 	
 	
 	//generate with thickening
-	//cmdLineOccupancyMap();
+	thiccOccupancymap(3);
+	cmdLineOccupancyMap();
 	
 	if (argc > 1)
 	{
-		cmdLineOccupancyMap();
-		thiccOccupancymap(3);
-		cmdLineOccupancyMap();
 		// Close the camera
 		zed.close();
 		return EXIT_SUCCESS;	
 	}
 	
 	//do stuff
+	cout << "beginning movement in 5 seconds\n";
+	/*
+	sleep(5);
 	while(true)
 	{
 		getTranslationImage(&zedCurrent);
@@ -115,7 +124,7 @@ int main(int argc, char **argv)
 		followPathBackwards(endNode, &zedCurrent, &zedGoal);
 		break;	
 	}
-	
+	*/
     // Close the camera
     zed.close();
     return EXIT_SUCCESS;
