@@ -10,7 +10,9 @@ export temp_home=$(pwd)
 sudo apt-get install -y cmake g++ wget unzip black
 cd ~/Downloads
 wget -O ~/Downloads/opencv.zip https://github.com/opencv/opencv/archive/4.x.zip
-unzip  ~/Downloads/opencv.zip
+wget -O ~/Downloads/opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.x.zip
+unzip opencv.zip
+unzip opencv_contrib.zip
 
 mkdir -p ~/Downloads/build && cd ~/Downloads/build
 cmake ../opencv-4.x
