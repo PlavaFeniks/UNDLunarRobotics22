@@ -5,8 +5,8 @@ StartLimitIntervalSec=10
 Type=simple
 User=root
 Group=root
-ExecStart=/usr/lib/Phoenix-Linux-SocketCAN-Example/bin/example
-WorkingDirectory=/usr/lib/Phoenix-Linux-SocketCAN-Example
+ExecStart=/home/pi/Documents/GitRepos/UNDLunarRobotics/bin/example
+WorkingDirectory=/home/pi/Documents/GitRepos/UNDLunarRobotics
 Restart=no
 RestartLimitBurst=10
 

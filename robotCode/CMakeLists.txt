@@ -14,34 +14,27 @@ add_definitions(-std=c++14 -O3)
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+set(PHOENIX_LIBRARY_PATH /usr/include/ctre/lib)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 find_package (Threads REQUIRED)
 find_package(SDL2 REQUIRED)
 
 # The following folder will be included
-include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("/usr/include/ctre/")
 set(CMAKE_CXX_STANDARD 17)
 add_executable(example ${PROJECT_SOURCE_DIR}/example.cpp)
 
 
 if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf") # Jetson TK1 / Pi
+	set(PHOENIX_LIBS_DIR ${PHOENIX_LIBRARY_PATH}/raspberry)
 	add_executable(testbed ${PROJECT_SOURCE_DIR}/testbed.cpp)
 	target_link_libraries(testbed ${SDL2_LIBRARIES})
 	target_link_libraries(testbed Threads::Threads)
+    target_link_libraries(testbed ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
+	target_link_libraries(testbed ${PHOENIX_LIBS_DIR}/libCTRE_Phoenix.so)
+	target_link_libraries(testbed wiringPi)
 
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_Phoenix.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCCI.a)
-	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixDiagnostics.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixPlatform_socketcan.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCanutils.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCore.a)
-    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_Phoenix.a)
-    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCCI.a)
-    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixDiagnostics.a)
-    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixPlatform_socketcan.a)
-    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCanutils.a)
-    target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCore.a)
 elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
 	option(LINK_SHARED_ZED "Link with the ZED SDK shared executable" ON)
 	if (NOT LINK_SHARED_ZED AND MSVC)
@@ -56,7 +49,7 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
 	SET(CMAKE_BUILD_TYPE "RelWithDebInfo")
 	endif()
 	
-	add_executable(zedshit ${PROJECT_SOURCE_DIR}/jettsonCode/main.cpp)
+	add_executable(autonomous ${PROJECT_SOURCE_DIR}/jettsonCode/main.cpp)
 	find_package(ZED 3 REQUIRED)
 	find_package(CUDA ${ZED_CUDA_VERSION} EXACT REQUIRED)
 	
@@ -66,22 +59,13 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
 	link_directories(${ZED_LIBRARY_DIR})
 	link_directories(${CUDA_LIBRARY_DIRS})
 	
-	
+	set(PHOENIX_LIBS_DIR ${PHOENIX_LIBRARY_PATH}/jetsontx)
 
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_Phoenix.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCCI.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixDiagnostics.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixPlatform_socketcan.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCanutils.a)
-    target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCore.a)
-    target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_Phoenix.a)
-    target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCCI.a)
-    target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixDiagnostics.a)
-    target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixPlatform_socketcan.a)
-    target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCanutils.a)
-    target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCore.a)
-	target_include_directories(zedshit PUBLIC ${CMAKE_SOURCE_DIR})
-	target_link_libraries(zedshit pthread)
+    target_link_libraries(autonomous ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
+	target_link_libraries(autonomous ${PHOENIX_LIBS_DIR}/libCTRE_Phoenix.so)
+
+	target_include_directories(autonomous PUBLIC ${CMAKE_SOURCE_DIR})
+	target_link_libraries(autonomous pthread)
     if (LINK_SHARED_ZED)
 		SET(ZED_LIBS ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
 	else()
@@ -91,24 +75,21 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
 	TARGET_LINK_LIBRARIES(zedshit ${ZED_LIBS})
 
 else()
-	target_include_directories(example PRIVATE ${CMAKE_SOURCE_DIR} AFTER)
-	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_Phoenix.a)
-	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCCI.a)
-	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixDiagnostics.a)
-	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixPlatform_socketcan.a)
-	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCanutils.a)
-	target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCore.a)
+	set(PHOENIX_LIBS_DIR ${PHOENIX_LIBRARY_PATH}/x86-64)
 endif()
 
 
 
-
-
+target_link_libraries(example ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
+target_link_libraries(example ${PHOENIX_LIBS_DIR}/libCTRE_Phoenix.so)
 target_link_libraries(example Threads::Threads)
 target_link_libraries(example ${SDL2_LIBRARIES})
 target_link_libraries(example stdc++fs)
 target_link_libraries(example pthread)
 
-
+add_custom_command(TARGET example POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${PHOENIX_LIBRARY_PATH}
+        $<TARGET_FILE_DIR:example>)
 
 

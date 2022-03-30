@@ -1,0 +1,10 @@
+# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo
+iface lo inet loopback
+
+allow-hotplug can0
+iface can0 can static
+bitrate 1000000
+txqueuelen 1000
+up /sbin/ip link set $IFACE down
+up /sbin/ip link set $IFACE up type can

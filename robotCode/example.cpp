@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <SDL2/SDL.h> //Read joystick events
 //file system stuff
+#include <filesystem>
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
@@ -171,17 +172,15 @@ int main() {
 	std::string interface;
 	interface = "can0";
 	int temp; 
-	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
-		perror("");
+	/*if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
+	//	perror("");
 		std::_Exit(0);
-	}
+	}*/
 	
 	// Comment out the call if you would rather use the automatically running diag-server, note this requires uninstalling diagnostics from Tuner. 
 	// c_SetPhoenixDiagnosticsStartTime(-1); // disable diag server, instead we will use the diag server stand alone application that Tuner installs
 
-	/* setup drive */
-		
-	
+	/* setup drive */	
 
 	while (true) {
 		
@@ -210,6 +209,7 @@ int main() {
 			continue;
 		}
 		
+
 		// Get information about the joystick
 		const char *name = SDL_JoystickName(joy);
 		const int num_axes = SDL_JoystickNumAxes(joy);
@@ -250,7 +250,7 @@ int main() {
 			}
 			/* [SAFETY] only enable drive if top left shoulder button is held down */
 			if (SDL_JoystickGetButton(joy, 4)) {
-				ctre::phoenix::unmanaged::FeedEnable(100);
+				ctre::phoenix::unmanaged::Unmanaged::FeedEnable(100);
 			}
 
 			if(abs(turn) > locoThresh or abs(rturn) > locoThresh){
