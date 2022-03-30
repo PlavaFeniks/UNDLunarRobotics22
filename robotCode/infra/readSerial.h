@@ -7,6 +7,7 @@
 #include <error.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 using namespace std;
 
