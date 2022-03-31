@@ -167,7 +167,6 @@ void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node mu
 			}
 			
 		}
-		cout << "neeto burrrreeeeto\n";
 		openNodes.erase(openNodes.begin() + index);
 		
 			

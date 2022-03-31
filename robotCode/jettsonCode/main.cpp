@@ -94,15 +94,14 @@ int main(int argc, char **argv)
 	
 	//generate map
 	getCloudAndPlane();
-	thiccOccupancymap(3);
-	cmdLineOccupancyMap();
 	startNode = mapOfPit[0][0];
 	endNode = mapOfPit[30][0];
-	makeRowIntraversable();
+	//makeRowIntraversable();
 	FindPath(startNode);
 	
 	
 	//generate with thickening
+	cmdLineOccupancyMap();
 	thiccOccupancymap(3);
 	cmdLineOccupancyMap();
 	
