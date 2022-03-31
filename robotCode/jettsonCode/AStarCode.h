@@ -1,5 +1,3 @@
-
-
 class AStarNode;
 int calculateDistance(int x, int y, AStarNode* targetNode);
 int calculateDistance(int x, int y, int targetX, int targetY);
@@ -24,6 +22,7 @@ struct TransformationData//used for storing zed position
 class AStarNode
 {
 	public:
+	bool fake = true;
 	float gCost = -1; //distance to starting node
 	float hCost = -1; //distance to endNode
 	float fCost = -1; //f = G + H
@@ -51,6 +50,7 @@ class AStarNode
 		this->x = x;
 		this->y = y;
 		this->z = z;
+		fake = false;
 	}
 	
 	void setXYZ(int x, int y, int z)
@@ -96,14 +96,20 @@ void initializeTesselatedMap()
 	}
 }
 
-void definePath(AStarNode* endNode) //define path from startNode to EndNode
+void definePath(AStarNode* currentNode) //define path from startNode to EndNode
 {
-	if (endNode->parent == NULL) return;
-	endNode->parent->child = endNode;
-	definePath(endNode->parent);
+	if (currentNode->parent == NULL)
+	{
+		if (currentNode == startNode) cout << "path found\n";
+		else cout <<"path not found\n";
+		return;
+	}
+	currentNode->parent->child = currentNode;
+	definePath(currentNode->parent);
 }
 void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node must be defined
 {
+	if (endNode->isTraversable == false) {cout << "great one\n";endNode->isTraversable=true;}
 	openNodes.push_back(startNode);
 	AStarNode* current = NULL;
 	int index = 0;
@@ -113,39 +119,41 @@ void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node mu
 		//sets current to node in openNodes with lowest fCost
 		for (int i=0; i<(int)openNodes.size(); i++)
 		{
-			if (current == NULL) {current = openNodes[i]; index = i; continue; }
-			if (openNodes[i]->fCost < current->fCost){current = openNodes[i]; index = i;}
+			if (current == NULL) {current = openNodes[i]; index = i;}
+			else if (openNodes[i]->fCost < current->fCost){current = openNodes[i]; index = i;}
 		}
 		if (current->x == endNode->x and current->y == endNode->y) break;
 		current->isClose = true;
 		
 		AStarNode** neighbors = new AStarNode*[8];
-		for (int i=0; i<8; i++) {neighbors[i] = NULL;}
+		//for (int i=0; i<8; i++) {neighbors[i] = NULL;}
 		int x = current->x;
 		int y = current->y;
 		
-		if (x>0)
+		int counter = 0;
+		for (int i=-1; i<=1; i++)
 		{
-			neighbors[0] = mapOfPit[y][x-1];
-			if (y>0) neighbors[1] = mapOfPit[y-1][x-1];
-			if (y<HEIGHT-1) neighbors[2] = mapOfPit[y+1][x-1];
+			for (int j=-1; j<=1; j++)
+			{
+				int newX = x+i;
+				int newY = y+j;
+				if ((newY==0 and newX==0) or newY<0 or newX<0 or newY>HEIGHT-1 or newX>WIDTH-1) continue;
+				neighbors[counter] = mapOfPit[newY][newX];
+				counter++;
+			}
 		}
-		if (x<WIDTH)
-		{
-			neighbors[3] = mapOfPit[y][x+1];
-			if (y>0) neighbors[4] = mapOfPit[y-1][x+1];
-			if (y<HEIGHT-1) neighbors[5] = mapOfPit[y+1][x+1];
-		}
-		if (y>0) neighbors[6] = mapOfPit[y-1][x];
-		if (y<HEIGHT-1) neighbors[7] = mapOfPit[y+1][x];
-		
 		
 		for (int i=0; i<8; i++)
 		{
-			AStarNode* neighbor = neighbors[i];
-			if (neighbor == NULL) continue; //go to next neighbor if current one doesnt exist
-			if (neighbor->isTraversable == false or neighbor->isClose == true) continue; //go to next neighbor if current neighbor is not traversable or closed
+			if (counter-1 < i) break;
+			
+			AStarNode* neighbor = (AStarNode*)neighbors[i];
+			if (neighbor == NULL) break; //go to next neighbor if current one doesnt exist
+			if (neighbor->isTraversable == false or neighbor->isClose == true or neighbor->fake == true) continue; //go to next neighbor if current neighbor is not traversable or closed
+
+		
 			int gCost = current->gCost + calculateDistance(current->x, current->y, neighbor->x, neighbor->y); //add gCost from parent and get distance from child to parent
+		
 			if (neighbor->parent == NULL)
 			{
 				neighbor->parent = current;
@@ -157,9 +165,13 @@ void FindPath(AStarNode* startingNode) //A* Algorithm, startNode and end node mu
 				neighbor->parent = current;
 				neighbor->setGCost(gCost, endNode);
 			}
+			
 		}
 		openNodes.erase(openNodes.begin() + index);
-	}
+		
+			
+		}
+	cout << "a* complete\n";
 	definePath(endNode);
 }
 
