@@ -42,6 +42,7 @@ if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf") # Jetson TK1 /
     target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixPlatform_socketcan.a)
     target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCanutils.a)
     target_link_libraries(testbed ${CMAKE_SOURCE_DIR}/lib/raspberry/libCTRE_PhoenixCore.a)
+    target_link_libraries(testbed wiringPi)
 elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
 	option(LINK_SHARED_ZED "Link with the ZED SDK shared executable" ON)
 	if (NOT LINK_SHARED_ZED AND MSVC)
