@@ -18,32 +18,29 @@ void adjust_angle(readSerial* ampSerial)
     //ampSerial((char*)"/dev/ttyACM0");
     float *arr;
     arr = ampSerial->getSerialVals(10);
-    //std::cout << "arr " << arr << std::endl;
     float distR1 = arr[7];                  //get distance
     std::cout << "distR: " << distR1 <<std::endl;
-    //float distR2 = stof(ampSerial.getSerial());
     float distL1 = arr[5];
     std::cout << "distL: " << distL1 <<std::endl;
-    //float distL2 = stof(ampSerial.getSerial());
-    float max_angle = 5;    //max angle considered lined up enough
-
-    int angl;           //needed correction angle to the hopper
     int sepperation = 38;   //seperation between sensors. unit cm?
     float speed = 0;        //motor speed
     
     //line up straight to hopper
-    while((distL1 > distR1 + 5) or (distR1 > distL1 + 5)){
+    while((distL1 > distR1 + 5) or (distR1 > distL1 + 5))
+    {
+        std::cout << arr[4] <<std::endl << arr[5] <<std::endl << arr[6] <<std::endl << arr[7] <<std::endl;
         if (distL1 > distR1 + 5)         //turn right
         {
             std::cout << "loop\n";
-            speed = -0.3;
+            speed = 0.7;
 
             Motor_RightF->SETSPEED(speed);                        //set the turn speed
             Motor_RightB->SETSPEED(speed);
             Motor_LeftF->SETSPEED(speed);
             Motor_LeftB->SETSPEED(speed);
 
-            //sleep(.5);
+
+            sleep(.5);
             
             arr = ampSerial->getSerialVals(10);
             distL1 = arr[5];            //update distance values
@@ -52,19 +49,22 @@ void adjust_angle(readSerial* ampSerial)
             std::cout << "distL " << distL1 << std::endl;
             std::cout << "distR " << distR1 << std::endl << std::endl;
             //angl = asin((distL1 - distR1) / sepperation)* (180/3.14);       //update angle 
+
         }
     
         else if (distR1 > distL1 + 5)
         {
             std::cout << "loop\n";
-            speed = 0.3;
+
+            speed = -0.7;
 
             Motor_RightF->SETSPEED(speed);                        //set the turn speed
             Motor_RightB->SETSPEED(speed);
             Motor_LeftF->SETSPEED(speed);
             Motor_LeftB->SETSPEED(speed);
 
-            //sleep(0.5);
+
+            sleep(0.5);
             
             arr = ampSerial->getSerialVals(10);
             distL1 = arr[5];            //update distance values
@@ -84,42 +84,54 @@ void adjust_angle(readSerial* ampSerial)
     }
 }
 
-void adjust_dist()
+
+void adjust_dist(readSerial* ampSerial)
 {
-    readSerial ampSerial((char*)"/dev/ttyACM0");
+    //readSerial ampSerial((char*)"/dev/ttyACM0");
     float *arr;
-    arr = ampSerial.getSerialVals(10);
-    float distR1 = arr[7]; 
-    //float distR2 = stof(ampSerial.getSerial());
+    arr = ampSerial->getSerialVals(10);
+    float distR1 = arr[7];
     float distL1 = arr[5];
-    //float distL2 = stof(ampSerial.getSerial());
-    int max_dist = 20;
+    std::cout << "left: " << distL1 << std::endl << "right: " << distR1 << std::endl;
 
-    //int distR = (distR1 + distR2) / 2;          //average the two
-    //int distL = (distL1 + distL2) / 2;
+    int max_dist = 25;                              //distance to stop, account for offset of sensors
 
-    float speed = 0;                            //speed to back up
+    float speed = 0.2;                              //speed to back up
 
     //back straight up to hopper until close enough
-    while ((distL1 > max_dist + 5) || (distR1 > max_dist + 5))
+    std::cout <<"start backup" << std::endl;
+    
+    while ((distL1 > max_dist) || (distR1 > max_dist))
     {
+        
+
         //backup
-        float distR1 = arr[7]; //get distance
-        //float distR2 = stof(ampSerial.getSerial());
-        float distL1 = arr[5];
-        //float distL2 = stof(ampSerial.getSerial());
-        //int distR = (distR1 + distR2) / 2;          //average the two
-        //int distL = (distL1 + distL2) / 2;
-
-        speed = 0.5;                                //later make this a function of distance
-
-        Motor_RightF->SETSPEED(-1*speed);                        //set the backup speed
-        Motor_RightB->SETSPEED(-1*speed);
+        
+        Motor_RightF->SETSPEED(-1 * speed);                        //set the backup speed
+        Motor_RightB->SETSPEED(-1 * speed);
         Motor_LeftF->SETSPEED(speed);
         Motor_LeftB->SETSPEED(speed);
+        
+        sleep(0.5);
+        /*
+        Motor_RightF->SETSPEED(0);                        //stop motors when done
+        Motor_RightB->SETSPEED(0);
+        Motor_LeftF->SETSPEED(0);
+        Motor_LeftB->SETSPEED(0);
+        */
+    
+        arr = ampSerial->getSerialVals(10);
+        distR1 = arr[7];                                      //update distance
+        distL1 = arr[5];
 
-        sleep(0.5);                                   //sleep for a while
+        std::cout << "left: " << distL1 << std::endl << "right: " << distR1 << std::endl;
     }
+
+    std::cout <<"exit loop" << std::endl;
+    Motor_RightF->SETSPEED(0);                        //stop motors when done
+    Motor_RightB->SETSPEED(0);
+    Motor_LeftF->SETSPEED(0);
+    Motor_LeftB->SETSPEED(0);
 }
 
 void depo_start()
@@ -149,10 +161,8 @@ void deposition()
 {
     adjust_angle(new readSerial((char*)"/dev/tty/ACM0"));
     std::cout << "angle adjusted\n Press Enter\n";
-    std::cin.get();
-    adjust_dist();
+    adjust_dist(new readSerial((char*)"/dev/tty/ACM0"));
     std::cout << "distance adjusted\n Press Enter\n";
-    std::cin.get();
     depo_start();
     std::cout << "done\n";
 }

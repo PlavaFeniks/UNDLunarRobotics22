@@ -10,6 +10,8 @@ class chassis
     public:
         chassis(bool);
         chassis(TalonPair*, TalonPair* , TalonPair*, TalonPair*);
+        float * get_quadrature_velocities();
+        float * get_voltages();
         void setup(bool);
         void SETSPEED(double, double);
         void PIVOT(int, double);
@@ -63,6 +65,7 @@ void chassis::PIVOT(int angle, double speed){
     return;
     
 }
+//This sets up manual and inverts one side to matchrotations, __brght should actually be inverted if you want controller to be nice
 void chassis::setup(bool isManual){
     //__brght->INVERT();
     //__frght->INVERT();
@@ -76,4 +79,30 @@ void chassis::setup(bool isManual){
         __frght->SWITCHMANUAL();
     }
     return;
+}
+
+//Get Quad Velocities from motor controllers
+float * chassis::get_quadrature_velocities(){
+
+    float *quadrature_velocities = (float*)malloc(sizeof(float*) * 4);
+    
+    quadrature_velocities[0] = __bleft->getQuadVelocity();
+    quadrature_velocities[1] = __brght->getQuadVelocity();
+    quadrature_velocities[2] = __fleft->getQuadVelocity();
+    quadrature_velocities[3] = __frght->getQuadVelocity();
+
+    return(quadrature_velocities);
+
+}
+
+//Get Voltages from motor controllers. Leverages chassis::getVoltage
+float * chassis::get_voltages(){
+    float *voltages = (float*)malloc(sizeof(float*) * 4);
+    
+    voltages[0] = __bleft->getVoltage();
+    voltages[1] = __brght->getVoltage();
+    voltages[2] = __fleft->getVoltage();
+    voltages[3] = __frght->getVoltage();
+
+    return(voltages);
 }

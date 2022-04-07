@@ -29,6 +29,10 @@
 #define IMAGEWIDTH 1280 //x size of image
 #define IMAGEHEIGHT 720 //y size of image
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
+#define XJETSONRELATIVETOROBOT -3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
+#define YJETSONRELATIVETOROBOT 3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
+#define PI 3.14159265 //the latest recipe
+
 
 using namespace std;
 using namespace sl;
@@ -36,16 +40,26 @@ using namespace sl;
 // Create a ZED camera object
 Camera zed;
 
+//initializations for chassis
+//#include "chassis.h"
+//chassis locomotion(false);
+
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
 #include "PathFollowing.h" //contains code for following a path
-#include "../chassis.h"
 
-chassis locomotion(false);
+void makeRowIntraversable()
+{
+	for (int i=0; i<WIDTH; i++)
+	{
+		mapOfPit[15][i]->isTraversable = false;
+	}
+}
 
 int main(int argc, char **argv)
 {
+	/*
 	// Set configuration parameters
 	std::string interface;
 	interface = "can0";
@@ -54,11 +68,9 @@ int main(int argc, char **argv)
 		perror("");
 		std::_Exit(0);
 	}
+	cout << "sleeping for 10 seconds\n";
 	sleep(10);
-	
-	ctre::phoenix::unmanaged::FeedEnable(2000);	
-	locomotion.SETSPEED(.50, .50);
-	sleep(2);
+	*/
     
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -74,49 +86,40 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     
+    //initialization
 	initializeTesselatedMap();
 	initializeOccupancyMapXYZVal();
 	initializePositionalTracking();
 	
-	if (argc > 1 && argv[1][0] == '1')
+	//generate map
+	getCloudAndPlane();
+	startNode = mapOfPit[0][0];
+	endNode = mapOfPit[30][0];
+	//makeRowIntraversable();
+	FindPath(startNode);
+	
+	
+	//generate with thickening
+	thiccOccupancymap(3);
+	cmdLineOccupancyMap();
+	
+	if (argc > 1)
 	{
-		zedGoal = {10,10,0,0,0,0};
+		// Close the camera
+		zed.close();
+		return EXIT_SUCCESS;	
 	}
-	else zedGoal = {0,10,0,0,0,0};
 	
-	//getCloudAndPlane();
-	//startNode = mapOfPit[0][0];
-	//endNode = mapOfPit[89][50];
-	//FindPath(startNode);
-	//cmdLineOccupancyMap();
+	//do stuff
+	cout << "beginning movement in 5 seconds\n";
 	
-	getTranslationImage(&zedCurrent);
-	zedCurrent = {0,0,0,0,0,0};
-	
-	determineAngleToGoal(zedCurrent, &zedGoal);
-	while(true)//periot
+	sleep(5);
+	while(true)
 	{
 		getTranslationImage(&zedCurrent);
-		float angleDiff = getAngleDifference(zedCurrent, zedGoal);
-		if (angleDiff < 1)
-		{
-			locomotion.SETSPEED(0, 0);
-			break;
-		}
-		else if (zedGoal.rz - zedCurrent.rz > 0) locomotion.SETSPEED(-.40, .40);
-		else if (zedGoal.rz - zedCurrent.rz < 0) locomotion.SETSPEED(.40, -.40);
-		
-	}
-	while(true) //walking
-	{
-		getTranslationImage(&zedCurrent);
-		float distance = getDistanceDifference(zedCurrent, zedGoal);
-		if (distance<2)
-		{
-			locomotion.SETSPEED(0,0);
-			break;
-		}
-		else locomotion.SETSPEED(.20, .20);
+		followPathForwards(startNode, &zedCurrent, &zedGoal);
+		followPathBackwards(endNode, &zedCurrent, &zedGoal);
+		break;	
 	}
 	
     // Close the camera
