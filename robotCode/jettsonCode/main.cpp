@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 	
 	//do stuff
 	cout << "beginning movement in 5 seconds\n";
-
+	
 	sleep(5);
 	while(true)
 	{
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 		followPathBackwards(endNode, &zedCurrent, &zedGoal);
 		break;	
 	}
-
+	
     // Close the camera
     zed.close();
     return EXIT_SUCCESS;
