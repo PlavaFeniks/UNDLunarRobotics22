@@ -107,7 +107,7 @@ void setup(string loggingFile){
     //setup_ard_Thread(&ampSerial);
 
 
-    string fileOpen = "./logs/logs_"+ to_string(loggingFile) + ".csv";
+    string fileOpen = "./logs/logs_"+ loggingFile + ".csv";
 	outputCSV.open(fileOpen.c_str());
 	cout<<fileOpen<<" has been opened for logging"<<endl;
     outputCSV<<"Time, quadratureVelocity, outputVoltage"<<endl;
@@ -135,7 +135,7 @@ int main(int argc, char* argv[]){
         std::_Exit(1);
     }
     else{
-        string loggingFile = to_string(argv[1]);
+        string loggingFile = str(argv[1]);
     }
 
     setup(loggingFile);
