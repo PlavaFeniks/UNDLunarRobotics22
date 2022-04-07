@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2021, STEREOLABS.
@@ -72,7 +71,6 @@ int main(int argc, char **argv)
 	cout << "sleeping for 10 seconds\n";
 	sleep(10);
 	*/
-	
     
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -102,7 +100,6 @@ int main(int argc, char **argv)
 	
 	
 	//generate with thickening
-	cmdLineOccupancyMap();
 	thiccOccupancymap(3);
 	cmdLineOccupancyMap();
 	
@@ -115,7 +112,7 @@ int main(int argc, char **argv)
 	
 	//do stuff
 	cout << "beginning movement in 5 seconds\n";
-	/*
+	
 	sleep(5);
 	while(true)
 	{
@@ -124,7 +121,7 @@ int main(int argc, char **argv)
 		followPathBackwards(endNode, &zedCurrent, &zedGoal);
 		break;	
 	}
-	*/
+	
     // Close the camera
     zed.close();
     return EXIT_SUCCESS;
