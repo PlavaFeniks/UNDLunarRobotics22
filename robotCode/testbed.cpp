@@ -15,7 +15,7 @@ This executable is designed to facillitate the development and testing of variou
 #include <iostream>
 #include <chrono>
 #include <thread>
-
+#include <fstream>
 #include <wiringPi.h>
 #include <unistd.h>
 #include "deposition.h"
@@ -28,6 +28,7 @@ using namespace std;
 TalonPair* buckets;
 TalonPair* screwdriver;
 readSerial ampSerial((char*)"/dev/ttyACM0");
+std::ofstream outputCSV;
 
 
 
@@ -80,7 +81,7 @@ double calcCurrent(TalonPair *mc){
 
 
 
-void setup(){
+void setup(string loggingFile){
     string interface;
     interface = "can0";
 	int temp; 
@@ -106,8 +107,7 @@ void setup(){
     //setup_ard_Thread(&ampSerial);
 
 
-    string fileOpen = "./logs/log"+to_string(i)+".csv";
-	std::ofstream outputCSV;
+    string fileOpen = "./logs/logs_"+ to_string(loggingFile) + ".csv";
 	outputCSV.open(fileOpen.c_str());
 	cout<<fileOpen<<" has been opened for logging"<<endl;
     outputCSV<<"Time, quadratureVelocity, outputVoltage"<<endl;
@@ -130,15 +130,20 @@ void cleanup(){
 
 int main(int argc, char* argv[]){
     
-   
+    if (argc != 2){
+        cout<<"USAGE './testbed <targetFileName>'"<<endl;
+        std::_Exit(1);
+    }
+    else{
+        string loggingFile = to_string(argv[1]);
+    }
 
-    setup();
+    setup(loggingFile);
     chrono::steady_clock::time_point start = chrono::steady_clock::now();
     chrono::steady_clock::time_point end = chrono::steady_clock::now();
     while(chrono::duration_cast<chrono::seconds>(start - end).count()){
 
     }
-    string amps;
     
     
     
@@ -161,147 +166,19 @@ int main(int argc, char* argv[]){
     readSerial ampSerial((char*)"/dev/ttyACM0");
 
 
-    while(true){
-        ctre::phoenix::unmanaged::FeedEnable(10000);
+    while(chrono::duration_cast<chrono::seconds>(start - end).count() < 20){
        
-        bucketRaw.SETSPEED(.75); 
-
-        
-        //adjust_angle(&ampSerial);
-
-        cout << "Start of loop" << endl;
-        //cin.get();
-     
-        //float *arr;
-        //arr = ampSerial.getSerialVals(10);
-        //cout<< "array" << arr << endl;  // Output the current reading from the arduino
-
-
-        //float Ibuck = calcCurrent(buckets);
-       // cout<< "ampsCalc= " << Ibuck<< endl;  // Output the current reading from the arduino
-
-
-        ctre::phoenix::unmanaged::FeedEnable(1000);
        
-       //~~~~~~~~~~~~~~~~~~~~~~~~~EVERYTHING Below is mining code~~~~~~~~~~~~~~~~~~~~~~~`
         double targetVelocity_UnitsPer100ms = true * 500.0 * 4096 / 600;
         
         
         buckets->SETSPEED(targetVelocity_UnitsPer100ms);       // Sets robot bucket rotation speed
         double Speeds = buckets->getQuadVelocity();
         cout<< "Speds = " <<  Speeds << endl;
-
-        
         screwdriver->SETSPEED(0);  // Sets the robot to lower screw
         
+        outputCSV
         
-        
-       // float I3 = arr[8];
-       //cout<< "ampsSerial = " << I3<< endl;  // Output the current reading from the arduino
-       
-       
-        /*
-        double voltageBuckets = buckets->getVoltage();
-        double quadBuckets = buckets->getQuadVelocity();
-        double Km = .0008795;
-        double armResistance = .22642;
-        double quadReadTime = .1; //seconds
-        double Ib = (voltageBuckets-4096*quadBuckets*Km/quadReadTime)/armResistance;
-        */
-        // Loop for if the robot bottoms out/ mining is complete
-
-        /*
-        if (digitalRead(HSwitch)){
-
-            while(true)      
-            {
-                
-               //nt long t1  = time();
-                
-                ctre::phoenix::unmanaged::FeedEnable(1000);  
-                buckets->SETSPEED(87);  
-                screwdriver->SETSPEED(-.7); // Sets the robot to raise screw
-
-                if (digitalRead(LSwitch)){
-                    
-                    screwdriver->SETSPEED(.7);  // Sets the robot to raise screw 
-                    sleep(2);                 // to get it off the limit switch
-
-                    return 0;
-
-                }
-                else {
-                    //cout << "the contration of 'who' and 'are' is Whore";
-                }
-            }
-
-        }
-        else if (digitalRead(LSwitch)){
-                
-                screwdriver->SETSPEED(.7);  // Sets the robot to raise screw 
-                sleep(2);                 // to get it off the limit switch
-
-                return 0;
-            }
-        
-        // Loop for if the robot is drawing too much current- will raise screwdriver until current is resolved
-  
-  
-  
-        else if(Ibuck >= Ie ){
-                
-                //float timeStart = clock();
-            
-                //I = stof(ampSerial.getSerial());
-                
-                cout<< "doing your mom  69";
-                ctre::phoenix::unmanaged::FeedEnable(1000);
-                
-                //cout<< "amps = " << stof(ampSerial.getSerial()) << endl;
-                screwdriver->SETSPEED(-.40);
-                //sleep(1);
-                cout<< "amps = " << I<< endl;  // Output the current reading from the arduino
-
-                // in case the robot never achieves desired current
-                if (digitalRead(LSwitch)){
-                    
-                    while(true)  {
-                    ctre::phoenix::unmanaged::FeedEnable(1000);
-
-                    screwdriver->SETSPEED(.7);  // Sets the robot to raise screw 
-                    sleep(2);   
-                    return 0;
-                    cout << "your dog";
-
-                    }
-                    
-                }    
-                /*
-               else if((clock()-timeStart)/CLOCKS_PER_SEC)>=4){
-                        break
-                    }
-                    */
-                /*
-                else {
-                    /*
-                    cout << "the contration of your mom";
-                    sleep(1); 
-                    screwdriver->SETSPEED(0);
-                    sleep(3);
-                    ampSerial.getSerial();
-                    I = stof(ampSerial.getSerial());
-                    
-                
-                } 
-                //ctre::phoenix::unmanaged::FeedEnable(1000);
-
-                //cout<< "doing your mom  69";
-            
-           
-        }
- //  
-        //cout<<"\n";
-        */
     }
     
 }
