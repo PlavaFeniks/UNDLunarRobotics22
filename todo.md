@@ -11,8 +11,8 @@
         --change current cmakeLists to reflect target platforms
 
 # example.cpp
-    Clean up code to only use talonpairs defined in movement.h
-    Clean up code and remove unncessary print statements
+        --Clean up code to only use talonpairs defined in movement.h
+        --Clean up code and remove unncessary print statements
     
 # movement.h
     Add functionality for controllmode:: PID

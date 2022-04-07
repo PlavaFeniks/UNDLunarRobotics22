@@ -7,14 +7,14 @@ This executable is designed to facillitate the development and testing of variou
 */
 
 #include "movement.h"
-#include "infra/readSerial.h"
+#include "readSerial.h"
+#include "infra/serialThread.h"
+
 
 #include <string>
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <wriringPi.h>
-
 
 #define LSwitch 0 // Switch repersenting digger is fully lowered
 #define HSwitch 7// Switch representing digger is fully raised
@@ -27,19 +27,41 @@ readSerial ampSerial((char*)"/dev/ttyACM0");
 
 
 
-void setup(){
-    buckets = new TalonPair(5);
-    screwdriver = new TalonPair(6);
 
+
+void setup(){
     string interface;
-	//Might need to add this into main loop
-	interface = "can0";
+    interface = "can0";
 	int temp; 
 	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
 		perror("");
 		std::_Exit(0);
 	}
+
+    float *limits = (float*)malloc(sizeof(float)*2);
+    float *PID_vals = (float*)malloc(sizeof(float)*4);
+
+    limits[0] = 0;
+    limits[1]= 1;
+
+    PID_vals[PID_P] = .22;
+    PID_vals[PID_I] = .05;
+    PID_vals[PID_D] = 0;
+    PID_vals[PID_F] = 0;
+    
+    buckets = new TalonPair(5, VELOCITY,limits, PID_vals);
+    screwdriver = new TalonPair(6);
+
+    setup_ard_Thread(&ampSerial);
+    
+
+	//Might need to add this into main loop
+	
     return;
+}
+void cleanup(){
+    pthread_mutex_destroy(&readLock);
+
 }
 
 int main(int argc, char* argv[]){
@@ -66,7 +88,6 @@ int main(int argc, char* argv[]){
 
     while(true){
         ctre::phoenix::unmanaged::FeedEnable(10000);
-       
        
         bucketRaw.SETSPEED(.75); 
 
