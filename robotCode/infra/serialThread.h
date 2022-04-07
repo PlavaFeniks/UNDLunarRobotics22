@@ -21,7 +21,7 @@ void * updateArd_values(void* threadData){
     readSerial * serialConnection = (readSerial *)threadData;
 
     //Always run in the background. This was simpler than implementing a flag-checking schema
-    while true{
+    while (true){
         pthread_mutex_lock(&readLock);
         ard_values = serialConnection->getSerialVals(ard_elements);
         pthread_mutex_unlock(&readLock);

@@ -149,6 +149,7 @@ TalonPair::TalonPair(int motor, int ControlMode, float *limits, float* pidf_gain
 	mc->Config_kI(0, pidf_gains[PID_I], 22);
 	mc->Config_kD(0, pidf_gains[PID_D], 22);
 	mc->Config_kF(0, pidf_gains[PID_F], 22);
+	mc->SetSensorPhase(true);
 
 	
 
