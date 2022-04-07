@@ -29,6 +29,8 @@ TalonPair* buckets;
 TalonPair* screwdriver;
 readSerial ampSerial((char*)"/dev/ttyACM0");
 
+
+
 /*
 EXAMPLE1: Timing the things. 
 
@@ -101,8 +103,20 @@ void setup(){
     buckets = new TalonPair(5, VELOCITY,limits, PID_vals);
     screwdriver = new TalonPair(6);
 
-    setup_ard_Thread(&ampSerial);
-    
+    //setup_ard_Thread(&ampSerial);
+
+
+    string fileOpen = "./logs/log"+to_string(i)+".csv";
+	std::ofstream outputCSV;
+	outputCSV.open(fileOpen.c_str());
+	cout<<fileOpen<<" has been opened for logging"<<endl;
+    outputCSV<<"Time, quadratureVelocity, outputVoltage"<<endl;
+    /* To write into the outputCSV do following
+
+    outputCSV<<Time + "," + talon.getQuardratureVelocity + "," + talon.getVoltage <<endl;
+
+
+    */
 
 	//Might need to add this into main loop
 	
