@@ -21,7 +21,7 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 				ry = updateOrient->ry = zed_pose.getEulerAngles(false).y;
 				rz = updateOrient->rz = zed_pose.getEulerAngles(false).z;
 				
-				/*
+				
 				//orientation set for the robot's position
 				float theta, gamma, alpha = 0;
 				theta = rz;
@@ -32,7 +32,6 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 				updateOrient->tx = x-distanceToCenterofRobot*cos((gamma) / 180 * PI);
 				updateOrient->ty = y-distanceToCenterofRobot*sin((gamma) / 180 * PI);
 				updateOrient->rz = updateOrient->rz;
-				*/
 				
 				
 				//cout << "x: " << updateOrient->tx << " y " << updateOrient->ty  << "\n";
@@ -94,11 +93,8 @@ void getTranslationIMU() //sets position and angle change using IMU
 void initializePositionalTracking()
 {
 	sl::PositionalTrackingParameters tracking_parameters;
-	//sl::Transform initial_position;
-	//initial_position.setTranslation(sl::Translation(XJETSONRELATIVETOROBOT, YJETSONRELATIVETOROBOT, 0));
 	
     tracking_parameters.enable_area_memory = true;
-	//tracking_parameters.initial_world_transform = initial_position;
     
     auto returned_state = zed.enablePositionalTracking(tracking_parameters);
     if (returned_state != ERROR_CODE::SUCCESS) {
@@ -216,9 +212,6 @@ void turnMoveBackwards(TransformationData* current, TransformationData* goalStat
 	cout << "-----\n";
 	cout << "Goal X: " << goalState->tx << " Y: " << goalState->ty << "\nCurrent X:" << current->tx << " Y: " << current->ty << "\n\n";
 	cout << "rotating " << angleDiff << " amount\n";
-	
-	cout << "goal rz: " << goalState->rz << "\n";
-	cout << "current rz: " << current->rz << "\n";
 	
 	while(true)//periot
 	{
