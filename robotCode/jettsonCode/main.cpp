@@ -41,8 +41,8 @@ using namespace sl;
 Camera zed;
 
 //initializations for chassis
-//#include "chassis.h"
-//chassis locomotion(false);
+#include "chassis.h"
+chassis locomotion(false);
 
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm

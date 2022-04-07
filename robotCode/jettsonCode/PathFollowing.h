@@ -54,6 +54,7 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 	return;
 }
 
+//absolute garbage, dont use
 void getTranslationIMU() //sets position and angle change using IMU
 {
 	float x,y,z;
@@ -148,11 +149,11 @@ void turnMoveForward(TransformationData* current, TransformationData* goalState)
 		if (abs(angleDiff) < ERRORRATEANGLE)
 		{
 			cout << "hit target angle, leftover" << angleDiff << "\n\n";
-			//locomotion.SETSPEED(0, 0);
+			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) ;//locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0) ;//locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0) locomotion.SETSPEED(-.30, .30);
+		else if (angleDiff < 0) locomotion.SETSPEED(.30, -.30);
 		
 	}
 	
@@ -166,10 +167,10 @@ void turnMoveForward(TransformationData* current, TransformationData* goalState)
 		if (distance<ERRORRATEDISTANCE)
 		{
 			cout << "hit target distance, leftover" << distance << "\n\n";
-			//locomotion.SETSPEED(0,0);
+			locomotion.SETSPEED(0,0);
 			break;
 		}
-		else ;//locomotion.SETSPEED(.10, .10);
+		else locomotion.SETSPEED(.10, .10);
 	}
 }
 void followPathForwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState) //goes from start to end node
@@ -220,11 +221,11 @@ void turnMoveBackwards(TransformationData* current, TransformationData* goalStat
 		if (abs(angleDiff) < ERRORRATEANGLE)
 		{
 			cout << "hit target angle, leftover" << angleDiff << "\n\n";
-			//locomotion.SETSPEED(0, 0);
+			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) ;//locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0) ;//locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0) locomotion.SETSPEED(-.30, .30);
+		else if (angleDiff < 0) locomotion.SETSPEED(.30, -.30);
 		
 	}
 	
@@ -238,10 +239,10 @@ void turnMoveBackwards(TransformationData* current, TransformationData* goalStat
 		if (distance<ERRORRATEDISTANCE)
 		{
 			cout << "hit target distance, leftover" << distance << "\n\n";
-			//locomotion.SETSPEED(0,0);
+			locomotion.SETSPEED(0,0);
 			break;
 		}
-		else ;//locomotion.SETSPEED(-.10, -.10);
+		else locomotion.SETSPEED(-.10, -.10);
 	}
 }
 void followPathBackwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState) //goes from start to end ndoe
