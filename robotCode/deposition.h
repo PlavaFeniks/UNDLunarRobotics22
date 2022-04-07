@@ -39,24 +39,30 @@ void adjust_angle(readSerial* ampSerial)
             Motor_LeftF->SETSPEED(speed);
             Motor_LeftB->SETSPEED(speed);
 
+
             sleep(.5);
             
             arr = ampSerial->getSerialVals(10);
             distL1 = arr[5];            //update distance values
             distR1 = arr[7];
+            //td::cout << "angle " << angl << std::endl;
             std::cout << "distL " << distL1 << std::endl;
             std::cout << "distR " << distR1 << std::endl << std::endl;
+            //angl = asin((distL1 - distR1) / sepperation)* (180/3.14);       //update angle 
+
         }
     
         else if (distR1 > distL1 + 5)
         {
             std::cout << "loop\n";
+
             speed = -0.7;
 
             Motor_RightF->SETSPEED(speed);                        //set the turn speed
             Motor_RightB->SETSPEED(speed);
             Motor_LeftF->SETSPEED(speed);
             Motor_LeftB->SETSPEED(speed);
+
 
             sleep(0.5);
             
