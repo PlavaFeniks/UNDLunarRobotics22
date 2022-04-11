@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 	while(true)
 	{
 		getTranslationImage(&zedCurrent);
-		followPathForwards(startNode, &zedCurrent, &zedGoal);
+//		followPathForwards(startNode, &zedCurrent, &zedGoal);
 		followPathBackwards(endNode, &zedCurrent, &zedGoal);
 		break;	
 	}
