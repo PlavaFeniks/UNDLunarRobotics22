@@ -2,15 +2,16 @@
 #include <unistd.h>
 #include <math.h>
 #include <iostream>
-#include "movement.h"
-#include "infra/readSerial.h"
+//#include "movement.h"
+//#include "infra/readSerial.h"
+//#include "infra/SerialThread.h"
+
 
 TalonPair * Motor_RightF = new TalonPair(4);      //define wheel motors
 TalonPair * Motor_RightB = new TalonPair(2);
 TalonPair * Motor_LeftF = new TalonPair(3);
 TalonPair * Motor_LeftB = new TalonPair(1);
 TalonPair * Motor_hopper_belt = new TalonPair(7);
-
 
 void adjust_angle(readSerial* ampSerial)
 {
