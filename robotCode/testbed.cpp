@@ -10,7 +10,7 @@ This executable is designed to facillitate the development and testing of variou
 #include <chrono>
 
 #include "infra/serialThread.h"
-
+#include "movement.h"
 #include <string>
 #include <iostream>
 #include <chrono>
@@ -19,6 +19,8 @@ This executable is designed to facillitate the development and testing of variou
 #include <wiringPi.h>
 #include <unistd.h>
 #include "deposition.h"
+#include "Mining.h"
+
 
 #define LSwitch 0 // Switch repersenting digger is fully Raised
 #define HSwitch 7// Switch representing digger is fully lowered
@@ -82,7 +84,9 @@ double calcCurrent(TalonPair *mc){
 
 
 void setup(string loggingFile){
+
     string interface;
+    
     interface = "can0";
 	int temp; 
 	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
@@ -90,19 +94,24 @@ void setup(string loggingFile){
 		std::_Exit(0);
 	}
 
+    
+
     float *limits = (float*)malloc(sizeof(float)*2);
     float *PID_vals = (float*)malloc(sizeof(float)*4);
 
     limits[0] = 0;
     limits[1]= 1;
 
-    PID_vals[PID_P] = .22;
-    PID_vals[PID_I] = .05;
-    PID_vals[PID_D] = 0;
-    PID_vals[PID_F] = 0;
+    PID_vals[PID_P] = .37;
+    PID_vals[PID_I] = .00000;
+    PID_vals[PID_D] = .8;
+    PID_vals[PID_F] = .3;
     
-    buckets = new TalonPair(5, VELOCITY,limits, PID_vals);
-    screwdriver = new TalonPair(6);
+    
+
+    //for (int i = 0; i<4; i++)cout<<PID_vals[i];
+    buckets = new TalonPair(4, VELOCITY,limits, PID_vals);
+    //screwdriver = new TalonPair(6);
 
     //setup_ard_Thread(&ampSerial);
 
@@ -110,6 +119,7 @@ void setup(string loggingFile){
     string fileOpen = "./logs/logs_"+ loggingFile + ".csv";
 	outputCSV.open(fileOpen.c_str());
 	cout<<fileOpen<<" has been opened for logging"<<endl;
+
     outputCSV<<"Time, quadratureVelocity, outputVoltage"<<endl;
     /* To write into the outputCSV do following
 
@@ -120,6 +130,7 @@ void setup(string loggingFile){
 
 	//Might need to add this into main loop
 	
+
     return;
     
 }
@@ -129,21 +140,17 @@ void cleanup(){
 }
 
 int main(int argc, char* argv[]){
-    
-    if (argc != 2){
-        cout<<"USAGE './testbed <targetFileName>'"<<endl;
-        std::_Exit(1);
-    }
-    else{
-        string loggingFile = str(argv[1]);
-    }
 
-    setup(loggingFile);
-    chrono::steady_clock::time_point start = chrono::steady_clock::now();
-    chrono::steady_clock::time_point end = chrono::steady_clock::now();
-    while(chrono::duration_cast<chrono::seconds>(start - end).count()){
+    string interface = "can0";
+	int temp; 
+	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
+		perror("");
+		std::_Exit(0);
+	}
 
-    }
+    MiningTime1(&ampSerial);
+
+    /*
     
     
     
@@ -157,34 +164,50 @@ int main(int argc, char* argv[]){
     pullUpDnControl(LSwitch, PUD_DOWN);
 
 
-
+    int loopCount = 0;
     char   x;       // X button input
     float  I;       // Current input
     float  Ie = 10;// Current epected
-    
-
+    double speeds;
+    double voltage = buckets->getVoltage();
+    //taget velocity * 4096 / 600 give RPM
+    double targetVelocity_UnitsPer100ms = 550;
     readSerial ampSerial((char*)"/dev/ttyACM0");
 
 
-    while(chrono::duration_cast<chrono::seconds>(start - end).count() < 20){
-       
-       
-        double targetVelocity_UnitsPer100ms = true * 500.0 * 4096 / 600;
-        
+    while(chrono::duration_cast<chrono::milliseconds>(end-start).count() <  3*10000){
+        voltage = 0;
+        speeds = 0;
         
         buckets->SETSPEED(targetVelocity_UnitsPer100ms);       // Sets robot bucket rotation speed
-        double Speeds = buckets->getQuadVelocity();
-        cout<< "Speds = " <<  Speeds << endl;
-        screwdriver->SETSPEED(0);  // Sets the robot to lower screw
         
-        outputCSV
-        
+        if (loopCount % 500 == 0){
+            //cout<<"Printing to Output LOOPCOUNT:"<<loopCount<<endl;
+            speeds = buckets->getQuadVelocity();
+            voltage = buckets->getVoltage();
+            outputCSV<<chrono::duration_cast<chrono::milliseconds>(end - start).count()<<","<< speeds<<","<<voltage<<endl;
+        }
+        end = chrono::steady_clock::now();
+        loopCount++;
     }
-    
+
+
+
+
+    outputCSV.close(); //This has to be the last line after all data is captured
+    */
+    return(0);
 }
 
-   
+/*
+to run 
+./bin/testbed <targetFileName>
+
+
+to copy 
+use flashdrive
+/home/pi/Documents/GitRepos/UNDLunarRobotics22/robotCode/logs
+*/
 
 
     
-       

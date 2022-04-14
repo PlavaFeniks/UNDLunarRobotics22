@@ -6,7 +6,7 @@ pthread_mutex_t readLock;
 pthread_t ard_thread;
 float * ard_values;
 void setup_ard_thread(readSerial*);
-void* updateArt_values(void*);
+void* updateArd_values(void*);
 float* readArd_values();
 
 

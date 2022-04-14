@@ -62,13 +62,13 @@ string readSerial::getSerial(){
     while(read_buf != ',' and read_buf != ';'){
         outPutString += read_buf;
         n =  read(fd, &read_buf,1);
+        cout<<read_buf<<flush;
     } 
     if (read_buf == ';') {
     outPutString += read_buf;
-    cout<<"semicolon Found"<<endl;
+    cout<<"semicolon Found"<<endl<<flush;
     }
     return(outPutString);
-
     
 
 }
@@ -88,7 +88,12 @@ float * readSerial::getSerialVals(int value_count){
             }
         }
         else{
-        float_vals[i] = stof(tempString);
+            try{ 
+                float_vals[i] = stof(tempString);
+            }
+            catch(exception e){
+                float_vals[i] = -1;
+            }
         }
         count ++;
     }
