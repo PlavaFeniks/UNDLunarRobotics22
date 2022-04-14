@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -88,7 +89,13 @@ float * readSerial::getSerialVals(int value_count){
             }
         }
         else{
-        float_vals[i] = stof(tempString);
+            try{
+                float_vals[i] = stof(tempString);
+            }
+            catch exception(e){
+                perror(e);
+                float_vals[i] = -1;
+            }
         }
         count ++;
     }
