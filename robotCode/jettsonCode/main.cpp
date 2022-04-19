@@ -41,8 +41,8 @@ using namespace sl;
 Camera zed;
 
 //initializations for chassis
-#include "chassis.h"
-chassis locomotion(false);
+//#include "chassis.h"
+//chassis locomotion(false);
 
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 	//generate map
 	getCloudAndPlane();
 	startNode = mapOfPit[0][0];
-	endNode = mapOfPit[30][0];
+	endNode = mapOfPit[5][0];
 	//makeRowIntraversable();
 	FindPath(startNode);
 	
@@ -117,8 +117,8 @@ int main(int argc, char **argv)
 	while(true)
 	{
 		getTranslationImage(&zedCurrent);
-//		followPathForwards(startNode, &zedCurrent, &zedGoal);
-		followPathBackwards(endNode, &zedCurrent, &zedGoal);
+		followPathForwards(startNode, &zedCurrent, &zedGoal, &zedNextGoal);
+		followPathBackwards(endNode, &zedCurrent, &zedGoal, &zedNextGoal);
 		break;	
 	}
 	

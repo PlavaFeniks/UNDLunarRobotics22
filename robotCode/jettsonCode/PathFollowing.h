@@ -14,14 +14,14 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 			auto state = zed.getPosition(zed_pose, REFERENCE_FRAME::WORLD);
 			if (state == POSITIONAL_TRACKING_STATE::OK)
 			{
-				x = updateOrient->tx=zed_pose.getTranslation().x/10 + XJETSONRELATIVETOROBOT;
-				y = updateOrient->ty=zed_pose.getTranslation().y/10 + YJETSONRELATIVETOROBOT + 30;
+				x = updateOrient->tx=zed_pose.getTranslation().x/10;// + XJETSONRELATIVETOROBOT;
+				y = updateOrient->ty=zed_pose.getTranslation().y/10;// + YJETSONRELATIVETOROBOT;
 				z = updateOrient->tz=zed_pose.getTranslation().z/10;
 				rx = updateOrient->rx = zed_pose.getEulerAngles(false).x;
 				ry = updateOrient->ry = zed_pose.getEulerAngles(false).y;
 				rz = updateOrient->rz = zed_pose.getEulerAngles(false).z;
 				
-				
+				/*
 				//orientation set for the robot's position
 				float theta, gamma, alpha = 0;
 				theta = rz;
@@ -32,7 +32,7 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 				updateOrient->tx = x-distanceToCenterofRobot*cos((gamma) / 180 * PI);
 				updateOrient->ty = y-distanceToCenterofRobot*sin((gamma) / 180 * PI);
 				updateOrient->rz = updateOrient->rz;
-				
+				*/
 				
 				//cout << "x: " << updateOrient->tx << " y " << updateOrient->ty  << "\n";
 				//cout << zed_pose.getEulerAngles(false).x << " " << zed_pose.getEulerAngles(false).y << " " << zed_pose.getEulerAngles(false).z << "\n";
@@ -132,7 +132,7 @@ float getDistanceDifference(TransformationData current, TransformationData goalS
 	return distance;
 }
 
-void turnMoveForward(TransformationData* current, TransformationData* goalState) //robot will turn and move towards desired location
+void turnMoveForward(TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState) //robot will turn and move towards desired location
 {
 	//find initial angle
 	getTranslationImage(current);
@@ -149,31 +149,38 @@ void turnMoveForward(TransformationData* current, TransformationData* goalState)
 		if (abs(angleDiff) < ERRORRATEANGLE)
 		{
 			cout << "hit target angle, leftover" << angleDiff << "\n\n";
-			locomotion.SETSPEED(0, 0);
+			//locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0) locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0) ;//locomotion.SETSPEED(-.30, .30);
+		else if (angleDiff < 0) ;//locomotion.SETSPEED(.30, -.30);
 		
 	}
 	
 	getTranslationImage(current);
-	float distance = getDistanceDifference(*current, *goalState);
-	cout << "moving " << distance << "\n";
+	float distanceToGoal = getDistanceDifference(*current, *goalState);
+	cout << "moving " << distanceToGoal << "\n";
 	while(true)//walking
 	{
 		getTranslationImage(current);
-		distance = getDistanceDifference(*current, *goalState);
-		if (distance<ERRORRATEDISTANCE)
+		distanceToGoal = getDistanceDifference(*current, *goalState);
+		float distanceToNextGoal = getDistanceDifference(*current, *nextGoalState);
+		if (distanceToGoal<ERRORRATEDISTANCE)
 		{
-			cout << "hit target distance, leftover" << distance << "\n\n";
-			locomotion.SETSPEED(0,0);
+			cout << "hit target distance, leftover" << distanceToGoal << "\n\n";
+			//locomotion.SETSPEED(0,0);
 			break;
 		}
-		else locomotion.SETSPEED(.20, .20);
+		else if (distanceToNextGoal<distanceToGoal)
+		{
+			cout << "overshot target, distance " << distanceToGoal << "\n\n";
+			//locomotion.SETSPEED(0,0);
+			break;
+		}
+		else ;//locomotion.SETSPEED(.20, .20);
 	}
 }
-void followPathForwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState) //goes from start to end node
+void followPathForwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState) //goes from start to end node
 {
 	cout << "moving forwards\nSleeping for 5 seconds\n";
 	sleep(5);
@@ -184,9 +191,21 @@ void followPathForwards(AStarNode* startingNode, TransformationData* current, Tr
 	while(currentNode != NULL)
 	{
 		AStarNode* nextNode = currentNode->child;
-		if (nextNode == NULL) break;		
+		if (nextNode == NULL) break;
 		goalState->tx = nextNode->x;
 		goalState->ty = nextNode->y;
+		
+		AStarNode* nextNextNode = nextNode->child;
+		if (nextNextNode == NULL)
+		{
+			nextGoalState->tx = goalState->tx + (goalState->tx - currentNode->x);
+			nextGoalState->ty = goalState->ty + (goalState->ty - currentNode->y);
+		}
+		else
+		{
+			nextGoalState->tx = nextNextNode->x;
+			nextGoalState->ty = nextNextNode->y;
+		}
 		
 		float distance;
 		getTranslationImage(current);
@@ -198,13 +217,13 @@ void followPathForwards(AStarNode* startingNode, TransformationData* current, Tr
 			continue;
 		}
 		
-		turnMoveForward(current, goalState);
+		turnMoveForward(current, goalState, nextGoalState);
 		currentNode = nextNode;
 	}
 }
 
 //------------------------------------backwards
-void turnMoveBackwards(TransformationData* current, TransformationData* goalState) //robot will turn and move towards desired location
+void turnMoveBackwards(TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState) //robot will turn and move towards desired location
 {
 	//find initial angle
 	getTranslationImage(current, false);
@@ -221,31 +240,38 @@ void turnMoveBackwards(TransformationData* current, TransformationData* goalStat
 		if (abs(angleDiff) < ERRORRATEANGLE)
 		{
 			cout << "hit target angle, leftover" << angleDiff << "\n\n";
-			locomotion.SETSPEED(0, 0);
+			//locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0) locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0) ;//locomotion.SETSPEED(-.30, .30);
+		else if (angleDiff < 0) ;//locomotion.SETSPEED(.30, -.30);
 		
 	}
 	
 	getTranslationImage(current, false);
-	float distance = getDistanceDifference(*current, *goalState);
-	cout << "moving " << distance << "\n";
+	float distanceToGoal = getDistanceDifference(*current, *goalState);
+	cout << "moving " << distanceToGoal << "\n";
 	while(true)//walking
 	{
 		getTranslationImage(current, false);
-		distance = getDistanceDifference(*current, *goalState);
-		if (distance<ERRORRATEDISTANCE)
+		distanceToGoal = getDistanceDifference(*current, *goalState);
+		float distanceToNextGoal = getDistanceDifference(*current, *nextGoalState);
+		if (distanceToGoal<ERRORRATEDISTANCE)
 		{
-			cout << "hit target distance, leftover" << distance << "\n\n";
-			locomotion.SETSPEED(0,0);
+			cout << "hit target distance, leftover" << distanceToGoal << "\n\n";
+			//locomotion.SETSPEED(0,0);
 			break;
 		}
-		else locomotion.SETSPEED(-.20, -.20);
+		else if (distanceToNextGoal<distanceToGoal)
+		{
+			cout << "overshot target, distance " << distanceToGoal << "\n\n";
+			//locomotion.SETSPEED(0,0);
+			break;
+		}
+		else ;//locomotion.SETSPEED(-.20, -.20);
 	}
 }
-void followPathBackwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState) //goes from start to end ndoe
+void followPathBackwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState) //goes from start to end ndoe
 {
 	cout << "moving backwards\nSleeping for 5 seconds\n";
 	sleep(5);
@@ -260,6 +286,18 @@ void followPathBackwards(AStarNode* startingNode, TransformationData* current, T
 		goalState->tx = nextNode->x;
 		goalState->ty = nextNode->y;
 		
+		AStarNode* nextNextNode = nextNode->parent;
+		if (nextNextNode == NULL)
+		{
+			nextGoalState->tx = goalState->tx + (goalState->tx - currentNode->x);
+			nextGoalState->ty = goalState->ty + (goalState->ty - currentNode->y);
+		}
+		else
+		{
+			nextGoalState->tx = nextNextNode->x;
+			nextGoalState->ty = nextNextNode->y;
+		}
+		
 		float distance;
 		getTranslationImage(current);
 		distance = getDistanceDifference(*current, *goalState);
@@ -270,7 +308,7 @@ void followPathBackwards(AStarNode* startingNode, TransformationData* current, T
 			continue;
 		}
 		
-		turnMoveBackwards(current, goalState);
+		turnMoveBackwards(current, goalState, nextGoalState);
 		currentNode = nextNode;
 		
 		sleep(1);
