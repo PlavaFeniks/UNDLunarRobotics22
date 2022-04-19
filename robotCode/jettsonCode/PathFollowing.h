@@ -15,7 +15,7 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 			if (state == POSITIONAL_TRACKING_STATE::OK)
 			{
 				x = updateOrient->tx=zed_pose.getTranslation().x/10 + XJETSONRELATIVETOROBOT;
-				y = updateOrient->ty=zed_pose.getTranslation().y/10 + YJETSONRELATIVETOROBOT + 30;
+				y = updateOrient->ty=zed_pose.getTranslation().y/10 + YJETSONRELATIVETOROBOT;
 				z = updateOrient->tz=zed_pose.getTranslation().z/10;
 				rx = updateOrient->rx = zed_pose.getEulerAngles(false).x;
 				ry = updateOrient->ry = zed_pose.getEulerAngles(false).y;
@@ -152,8 +152,8 @@ void turnMoveForward(TransformationData* current, TransformationData* goalState)
 			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0) locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0)locomotion.SETSPEED(-.30, .30);
+		else if (angleDiff < 0)locomotion.SETSPEED(.30, -.30);
 		
 	}
 	

@@ -43,6 +43,8 @@ Camera zed;
 //initializations for chassis
 #include "chassis.h"
 chassis locomotion(false);
+//deposition code
+//#include "deposition.h"
 
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
@@ -51,7 +53,7 @@ chassis locomotion(false);
 
 void makeRowIntraversable()
 {
-	for (int i=0; i<WIDTH; i++)
+	for (int i=0; i<10; i++)
 	{
 		mapOfPit[15][i]->isTraversable = false;
 	}
@@ -59,7 +61,7 @@ void makeRowIntraversable()
 
 int main(int argc, char **argv)
 {
-	/*
+	
 	// Set configuration parameters
 	std::string interface;
 	interface = "can0";
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
 	}
 	cout << "sleeping for 10 seconds\n";
 	sleep(10);
-	*/
+	
     
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -94,13 +96,13 @@ int main(int argc, char **argv)
 	//generate map
 	getCloudAndPlane();
 	startNode = mapOfPit[0][0];
-	endNode = mapOfPit[30][0];
-	//makeRowIntraversable();
+	endNode = mapOfPit[40][0];
+	cmdLineOccupancyMap();
+	thiccOccupancymap(3);
 	FindPath(startNode);
 	
 	
 	//generate with thickening
-	thiccOccupancymap(3);
 	cmdLineOccupancyMap();
 	
 	if (argc > 1)
@@ -117,7 +119,7 @@ int main(int argc, char **argv)
 	while(true)
 	{
 		getTranslationImage(&zedCurrent);
-//		followPathForwards(startNode, &zedCurrent, &zedGoal);
+		followPathForwards(startNode, &zedCurrent, &zedGoal);
 		followPathBackwards(endNode, &zedCurrent, &zedGoal);
 		break;	
 	}
