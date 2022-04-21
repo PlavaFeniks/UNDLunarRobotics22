@@ -14,8 +14,9 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 			auto state = zed.getPosition(zed_pose, REFERENCE_FRAME::WORLD);
 			if (state == POSITIONAL_TRACKING_STATE::OK)
 			{
-				x = updateOrient->tx=zed_pose.getTranslation().x/10;// + XJETSONRELATIVETOROBOT;
-				y = updateOrient->ty=zed_pose.getTranslation().y/10;// + YJETSONRELATIVETOROBOT;
+				x = updateOrient->tx=zed_pose.getTranslation().x/10 + XJETSONRELATIVETOROBOT;
+				y = updateOrient->ty=zed_pose.getTranslation().y/10 + YJETSONRELATIVETOROBOT;
+
 				z = updateOrient->tz=zed_pose.getTranslation().z/10;
 				rx = updateOrient->rx = zed_pose.getEulerAngles(false).x;
 				ry = updateOrient->ry = zed_pose.getEulerAngles(false).y;
@@ -149,11 +150,12 @@ void turnMoveForward(TransformationData* current, TransformationData* goalState,
 		if (abs(angleDiff) < ERRORRATEANGLE)
 		{
 			cout << "hit target angle, leftover" << angleDiff << "\n\n";
-			//locomotion.SETSPEED(0, 0);
+			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) ;//locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0) ;//locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0)locomotion.SETSPEED(-.30, .30);
+		else if (angleDiff < 0)locomotion.SETSPEED(.30, -.30);
+
 		
 	}
 	
@@ -168,16 +170,16 @@ void turnMoveForward(TransformationData* current, TransformationData* goalState,
 		if (distanceToGoal<ERRORRATEDISTANCE)
 		{
 			cout << "hit target distance, leftover" << distanceToGoal << "\n\n";
-			//locomotion.SETSPEED(0,0);
+			locomotion.SETSPEED(0,0);
 			break;
 		}
 		else if (distanceToNextGoal<distanceToGoal)
 		{
 			cout << "overshot target, distance " << distanceToGoal << "\n\n";
-			//locomotion.SETSPEED(0,0);
+			locomotion.SETSPEED(0,0);
 			break;
 		}
-		else ;//locomotion.SETSPEED(.20, .20);
+		else locomotion.SETSPEED(.20, .20);
 	}
 }
 void followPathForwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState) //goes from start to end node
@@ -240,11 +242,11 @@ void turnMoveBackwards(TransformationData* current, TransformationData* goalStat
 		if (abs(angleDiff) < ERRORRATEANGLE)
 		{
 			cout << "hit target angle, leftover" << angleDiff << "\n\n";
-			//locomotion.SETSPEED(0, 0);
+			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) ;//locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0) ;//locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0) locomotion.SETSPEED(-.30, .30);
+		else if (angleDiff < 0) locomotion.SETSPEED(.30, -.30);
 		
 	}
 	
@@ -259,16 +261,16 @@ void turnMoveBackwards(TransformationData* current, TransformationData* goalStat
 		if (distanceToGoal<ERRORRATEDISTANCE)
 		{
 			cout << "hit target distance, leftover" << distanceToGoal << "\n\n";
-			//locomotion.SETSPEED(0,0);
+			locomotion.SETSPEED(0,0);
 			break;
 		}
 		else if (distanceToNextGoal<distanceToGoal)
 		{
 			cout << "overshot target, distance " << distanceToGoal << "\n\n";
-			//locomotion.SETSPEED(0,0);
+			locomotion.SETSPEED(0,0);
 			break;
 		}
-		else ;//locomotion.SETSPEED(-.20, -.20);
+		else locomotion.SETSPEED(-.20, -.20);
 	}
 }
 void followPathBackwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState) //goes from start to end ndoe
