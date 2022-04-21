@@ -17,7 +17,7 @@ struct TransformationData//used for storing zed position
 	float rx;
 	float ry;
 	float rz;
-} zedCurrent, zedGoal;
+} zedCurrent, zedGoal, zedNextGoal;
 
 class AStarNode
 {

@@ -46,6 +46,7 @@ chassis locomotion(false);
 //deposition code
 //#include "deposition.h"
 
+
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
@@ -99,6 +100,7 @@ int main(int argc, char **argv)
 	endNode = mapOfPit[40][0];
 	cmdLineOccupancyMap();
 	thiccOccupancymap(3);
+
 	FindPath(startNode);
 	
 	
@@ -119,8 +121,8 @@ int main(int argc, char **argv)
 	while(true)
 	{
 		getTranslationImage(&zedCurrent);
-		followPathForwards(startNode, &zedCurrent, &zedGoal);
-		followPathBackwards(endNode, &zedCurrent, &zedGoal);
+		followPathForwards(startNode, &zedCurrent, &zedGoal, &zedNextGoal);
+		followPathBackwards(endNode, &zedCurrent, &zedGoal, &zedNextGoal);
 		break;	
 	}
 	

@@ -10,15 +10,17 @@ This executable is designed to facillitate the development and testing of variou
 #include <chrono>
 
 #include "infra/serialThread.h"
-
+#include "movement.h"
 #include <string>
 #include <iostream>
 #include <chrono>
 #include <thread>
-
+#include <fstream>
 #include <wiringPi.h>
 #include <unistd.h>
 #include "deposition.h"
+#include "Mining.h"
+
 
 #define LSwitch 0 // Switch repersenting digger is fully Raised
 #define HSwitch 7// Switch representing digger is fully lowered
@@ -28,6 +30,9 @@ using namespace std;
 TalonPair* buckets;
 TalonPair* screwdriver;
 readSerial ampSerial((char*)"/dev/ttyACM0");
+std::ofstream outputCSV;
+
+
 
 /*
 EXAMPLE1: Timing the things. 
@@ -78,8 +83,10 @@ double calcCurrent(TalonPair *mc){
 
 
 
-void setup(){
+void setup(string loggingFile){
+
     string interface;
+    
     interface = "can0";
 	int temp; 
 	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
@@ -87,25 +94,43 @@ void setup(){
 		std::_Exit(0);
 	}
 
+    
+
     float *limits = (float*)malloc(sizeof(float)*2);
     float *PID_vals = (float*)malloc(sizeof(float)*4);
 
     limits[0] = 0;
     limits[1]= 1;
 
-    PID_vals[PID_P] = .22;
-    PID_vals[PID_I] = .05;
-    PID_vals[PID_D] = 0;
-    PID_vals[PID_F] = 0;
+    PID_vals[PID_P] = .37;
+    PID_vals[PID_I] = .00000;
+    PID_vals[PID_D] = .8;
+    PID_vals[PID_F] = .3;
     
-    buckets = new TalonPair(5, VELOCITY,limits, PID_vals);
-    screwdriver = new TalonPair(6);
+    
 
-    setup_ard_Thread(&ampSerial);
-    
+    //for (int i = 0; i<4; i++)cout<<PID_vals[i];
+    buckets = new TalonPair(4, VELOCITY,limits, PID_vals);
+    //screwdriver = new TalonPair(6);
+
+    //setup_ard_Thread(&ampSerial);
+
+
+    string fileOpen = "./logs/logs_"+ loggingFile + ".csv";
+	outputCSV.open(fileOpen.c_str());
+	cout<<fileOpen<<" has been opened for logging"<<endl;
+
+    outputCSV<<"Time, quadratureVelocity, outputVoltage"<<endl;
+    /* To write into the outputCSV do following
+
+    outputCSV<<Time + "," + talon.getQuardratureVelocity + "," + talon.getVoltage <<endl;
+
+
+    */
 
 	//Might need to add this into main loop
 	
+
     return;
     
 }
@@ -115,16 +140,17 @@ void cleanup(){
 }
 
 int main(int argc, char* argv[]){
-    
-   
 
-    setup();
-    chrono::steady_clock::time_point start = chrono::steady_clock::now();
-    chrono::steady_clock::time_point end = chrono::steady_clock::now();
-    while(chrono::duration_cast<chrono::seconds>(start - end).count()){
+    string interface = "can0";
+	int temp; 
+	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
+		perror("");
+		std::_Exit(0);
+	}
 
-    }
-    string amps;
+    MiningTime1(&ampSerial);
+
+    /*
     
     
     
@@ -138,162 +164,50 @@ int main(int argc, char* argv[]){
     pullUpDnControl(LSwitch, PUD_DOWN);
 
 
-
+    int loopCount = 0;
     char   x;       // X button input
     float  I;       // Current input
     float  Ie = 10;// Current epected
-    
-
+    double speeds;
+    double voltage = buckets->getVoltage();
+    //taget velocity * 4096 / 600 give RPM
+    double targetVelocity_UnitsPer100ms = 550;
     readSerial ampSerial((char*)"/dev/ttyACM0");
 
 
-    while(true){
-        ctre::phoenix::unmanaged::FeedEnable(10000);
-       
-        bucketRaw.SETSPEED(.75); 
-
-        
-        //adjust_angle(&ampSerial);
-
-        cout << "Start of loop" << endl;
-        //cin.get();
-     
-        //float *arr;
-        //arr = ampSerial.getSerialVals(10);
-        //cout<< "array" << arr << endl;  // Output the current reading from the arduino
-
-
-        //float Ibuck = calcCurrent(buckets);
-       // cout<< "ampsCalc= " << Ibuck<< endl;  // Output the current reading from the arduino
-
-
-        ctre::phoenix::unmanaged::FeedEnable(1000);
-       
-       //~~~~~~~~~~~~~~~~~~~~~~~~~EVERYTHING Below is mining code~~~~~~~~~~~~~~~~~~~~~~~`
-        double targetVelocity_UnitsPer100ms = true * 500.0 * 4096 / 600;
-        
+    while(chrono::duration_cast<chrono::milliseconds>(end-start).count() <  3*10000){
+        voltage = 0;
+        speeds = 0;
         
         buckets->SETSPEED(targetVelocity_UnitsPer100ms);       // Sets robot bucket rotation speed
-        double Speeds = buckets->getQuadVelocity();
-        cout<< "Speds = " <<  Speeds << endl;
-
         
-        screwdriver->SETSPEED(0);  // Sets the robot to lower screw
-        
-        
-        
-       // float I3 = arr[8];
-       //cout<< "ampsSerial = " << I3<< endl;  // Output the current reading from the arduino
-       
-       
-        /*
-        double voltageBuckets = buckets->getVoltage();
-        double quadBuckets = buckets->getQuadVelocity();
-        double Km = .0008795;
-        double armResistance = .22642;
-        double quadReadTime = .1; //seconds
-        double Ib = (voltageBuckets-4096*quadBuckets*Km/quadReadTime)/armResistance;
-        */
-        // Loop for if the robot bottoms out/ mining is complete
-
-        /*
-        if (digitalRead(HSwitch)){
-
-            while(true)      
-            {
-                
-               //nt long t1  = time();
-                
-                ctre::phoenix::unmanaged::FeedEnable(1000);  
-                buckets->SETSPEED(87);  
-                screwdriver->SETSPEED(-.7); // Sets the robot to raise screw
-
-                if (digitalRead(LSwitch)){
-                    
-                    screwdriver->SETSPEED(.7);  // Sets the robot to raise screw 
-                    sleep(2);                 // to get it off the limit switch
-
-                    return 0;
-
-                }
-                else {
-                    //cout << "the contration of 'who' and 'are' is Whore";
-                }
-            }
-
+        if (loopCount % 500 == 0){
+            //cout<<"Printing to Output LOOPCOUNT:"<<loopCount<<endl;
+            speeds = buckets->getQuadVelocity();
+            voltage = buckets->getVoltage();
+            outputCSV<<chrono::duration_cast<chrono::milliseconds>(end - start).count()<<","<< speeds<<","<<voltage<<endl;
         }
-        else if (digitalRead(LSwitch)){
-                
-                screwdriver->SETSPEED(.7);  // Sets the robot to raise screw 
-                sleep(2);                 // to get it off the limit switch
-
-                return 0;
-            }
-        
-        // Loop for if the robot is drawing too much current- will raise screwdriver until current is resolved
-  
-  
-  
-        else if(Ibuck >= Ie ){
-                
-                //float timeStart = clock();
-            
-                //I = stof(ampSerial.getSerial());
-                
-                cout<< "doing your mom  69";
-                ctre::phoenix::unmanaged::FeedEnable(1000);
-                
-                //cout<< "amps = " << stof(ampSerial.getSerial()) << endl;
-                screwdriver->SETSPEED(-.40);
-                //sleep(1);
-                cout<< "amps = " << I<< endl;  // Output the current reading from the arduino
-
-                // in case the robot never achieves desired current
-                if (digitalRead(LSwitch)){
-                    
-                    while(true)  {
-                    ctre::phoenix::unmanaged::FeedEnable(1000);
-
-                    screwdriver->SETSPEED(.7);  // Sets the robot to raise screw 
-                    sleep(2);   
-                    return 0;
-                    cout << "your dog";
-
-                    }
-                    
-                }    
-                /*
-               else if((clock()-timeStart)/CLOCKS_PER_SEC)>=4){
-                        break
-                    }
-                    */
-                /*
-                else {
-                    /*
-                    cout << "the contration of your mom";
-                    sleep(1); 
-                    screwdriver->SETSPEED(0);
-                    sleep(3);
-                    ampSerial.getSerial();
-                    I = stof(ampSerial.getSerial());
-                    
-                
-                } 
-                //ctre::phoenix::unmanaged::FeedEnable(1000);
-
-                //cout<< "doing your mom  69";
-            
-           
-        }
- //  
-        //cout<<"\n";
-        */
+        end = chrono::steady_clock::now();
+        loopCount++;
     }
-    
+
+
+
+
+    outputCSV.close(); //This has to be the last line after all data is captured
+    */
+    return(0);
 }
 
-   
+/*
+to run 
+./bin/testbed <targetFileName>
+
+
+to copy 
+use flashdrive
+/home/pi/Documents/GitRepos/UNDLunarRobotics22/robotCode/logs
+*/
 
 
     
-       
