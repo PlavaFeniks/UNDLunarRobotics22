@@ -53,8 +53,8 @@ class TalonPair{
 					
 				}
 				else if ( abs(speed) < limit[0]){
-					(speed<0)? speed = -limit[0] : speed = limit[0];
-					
+					//(speed<0)? speed = -limit[0] : speed = limit[0];
+					speed = (speed<0)? -limit[0] : limit[0];
 				}
 				//set the speed here
 				mc->Set(ControlMode::PercentOutput, speed);
@@ -68,7 +68,7 @@ class TalonPair{
 				break;
 
 			case POSITION:
-				std::cout<<"Position value set to ###INSERT INFORMATION FROM THE THING HERE###"<<endl;
+				//std::cout<<"Position value set to ###INSERT INFORMATION FROM THE THING HERE###"<<endl;
 				mc->Set(ControlMode::Position, speed);
 				break;
 			

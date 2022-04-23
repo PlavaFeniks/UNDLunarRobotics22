@@ -9,6 +9,7 @@ class chassis
         TalonPair * __frght;
     public:
         chassis(bool);
+        chassis(float *);
         chassis(TalonPair*, TalonPair* , TalonPair*, TalonPair*);
         float * get_quadrature_velocities();
         float * get_voltages();
@@ -18,6 +19,15 @@ class chassis
         void SWITCHMANUAL();
 
 };
+chassis::chassis(float* PID_vals){
+    float limits[2] = {0,1};
+    __bleft = new TalonPair(RearLeft, VELOCITY, limits, PID_vals);
+    __brght = new TalonPair(RearLeft, VELOCITY, limits, PID_vals);
+    __frght = new TalonPair(RearLeft, VELOCITY, limits, PID_vals);
+    __fleft = new TalonPair(RearLeft, VELOCITY, limits, PID_vals);
+    setup(false);
+    cout<<"Successfully created chassis control with velocitySettings"<<endl;
+}
 
 chassis::chassis(bool isManual){
     __bleft = new TalonPair(RearLeft);
@@ -106,3 +116,4 @@ float * chassis::get_voltages(){
 
     return(voltages);
 }
+
