@@ -23,6 +23,7 @@
 #include <vector>
 #include <unistd.h>
 #include "/usr/include/python2.7/Python.h"
+#include "../Mining.h"
 
 #define WIDTH 90 //width of tesselated map
 #define HEIGHT 90 //height of tesselated map
@@ -72,8 +73,9 @@ int main(int argc, char **argv)
 		std::_Exit(0);
 	}
 	cout << "sleeping for 10 seconds\n";
+	LimitSwitchTest();
+
 	sleep(10);
-	
     
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -97,7 +99,7 @@ int main(int argc, char **argv)
 	//generate map
 	getCloudAndPlane();
 	startNode = mapOfPit[0][0];
-	endNode = mapOfPit[40][0];
+	endNode = mapOfPit[30][0];
 	cmdLineOccupancyMap();
 	thiccOccupancymap(3);
 

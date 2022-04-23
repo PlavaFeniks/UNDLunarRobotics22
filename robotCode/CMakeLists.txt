@@ -25,6 +25,14 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(example ${PROJECT_SOURCE_DIR}/example.cpp)
 
 
+set(phoenix_libs 
+	"libCTRE_Phoenix.a"
+	"libCTRE_PhoenixCCI.a"
+	"libCTRE_PhoenixDiagnostics.a"
+	"libCTRE_PhoenixPlatform_socketcan.a"
+	"libCTRE_PhoenixCanutils.a"
+	"libCTRE_PhoenixCore.a")
+
 if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf") # Jetson TK1 / Pi
 	add_executable(testbed ${PROJECT_SOURCE_DIR}/testbed.cpp)
 	target_link_libraries(testbed ${SDL2_LIBRARIES})
@@ -75,12 +83,19 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixPlatform_socketcan.a)
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCanutils.a)
     target_link_libraries(example ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCore.a)
+	#foreach (lib ${phoenix_libs})
+  	#	target_link_libraries( zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/${phoenix_libs})
+	#endforeach ()
+
+
+
     target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_Phoenix.a)
-    target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCCI.a)
+   	target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCCI.a)
     target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixDiagnostics.a)
     target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixPlatform_socketcan.a)
     target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCanutils.a)
     target_link_libraries(zedshit ${CMAKE_SOURCE_DIR}/lib/jetsontx/libCTRE_PhoenixCore.a)
+	target_link_libraries(zedshit  JetsonGPIO)
 	target_include_directories(zedshit PUBLIC ${CMAKE_SOURCE_DIR})
 	target_link_libraries(zedshit pthread)
     if (LINK_SHARED_ZED)

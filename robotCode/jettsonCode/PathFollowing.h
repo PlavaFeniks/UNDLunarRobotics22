@@ -22,7 +22,7 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 				ry = updateOrient->ry = zed_pose.getEulerAngles(false).y;
 				rz = updateOrient->rz = zed_pose.getEulerAngles(false).z;
 				
-				/*
+				
 				//orientation set for the robot's position
 				float theta, gamma, alpha = 0;
 				theta = rz;
@@ -33,7 +33,7 @@ void getTranslationImage(TransformationData* updateOrient, bool driveForward = t
 				updateOrient->tx = x-distanceToCenterofRobot*cos((gamma) / 180 * PI);
 				updateOrient->ty = y-distanceToCenterofRobot*sin((gamma) / 180 * PI);
 				updateOrient->rz = updateOrient->rz;
-				*/
+				
 				
 				//cout << "x: " << updateOrient->tx << " y " << updateOrient->ty  << "\n";
 				//cout << zed_pose.getEulerAngles(false).x << " " << zed_pose.getEulerAngles(false).y << " " << zed_pose.getEulerAngles(false).z << "\n";
