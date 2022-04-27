@@ -19,7 +19,7 @@ void adjust_angle(readSerial* ampSerial)
     //ampSerial((char*)"/dev/ttyACM0");
     float *arr;
     arr = ampSerial->getSerialVals(10);
-    float distR1 = arr[7];                  //get distance
+    float distR1 = arr[4];                  //get distance
     std::cout << "distR: " << distR1 <<std::endl;
     float distL1 = arr[5];
     std::cout << "distL: " << distL1 <<std::endl;
@@ -44,8 +44,8 @@ void adjust_angle(readSerial* ampSerial)
             sleep(.5);
             
             arr = ampSerial->getSerialVals(10);
-            distL1 = arr[5];            //update distance values
-            distR1 = arr[7];
+            distL1 = arr[4];            //update distance values
+            distR1 = arr[5];
             //td::cout << "angle " << angl << std::endl;
             std::cout << "distL " << distL1 << std::endl;
             std::cout << "distR " << distR1 << std::endl << std::endl;
@@ -68,8 +68,8 @@ void adjust_angle(readSerial* ampSerial)
             sleep(0.5);
             
             arr = ampSerial->getSerialVals(10);
-            distL1 = arr[5];            //update distance values
-            distR1 = arr[7];
+            distL1 = arr[4];            //update distance values
+            distR1 = arr[5];
 
             //std::cout << "angle " << angl << std::endl;
             std::cout << "distL " << distL1 << std::endl;
@@ -91,8 +91,8 @@ void adjust_dist(readSerial* ampSerial)
     //readSerial ampSerial((char*)"/dev/ttyACM0");
     float *arr;
     arr = ampSerial->getSerialVals(10);
-    float distR1 = arr[7];
-    float distL1 = arr[5];
+    float distR1 = arr[5];
+    float distL1 = arr[4];
     std::cout << "left: " << distL1 << std::endl << "right: " << distR1 << std::endl;
 
     int max_dist = 25;                              //distance to stop, account for offset of sensors
@@ -122,8 +122,8 @@ void adjust_dist(readSerial* ampSerial)
         */
     
         arr = ampSerial->getSerialVals(10);
-        distR1 = arr[7];                                      //update distance
-        distL1 = arr[5];
+        distR1 = arr[5];                                      //update distance
+        distL1 = arr[4];
 
         std::cout << "left: " << distL1 << std::endl << "right: " << distR1 << std::endl;
     }
@@ -137,22 +137,23 @@ void adjust_dist(readSerial* ampSerial)
 
 void depo_start()
 {
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     int min_load_cell = 0;      //value where hopper is considered empty
-    float sleep_time = 0.5;         //amount of time between ld_cell_update
+    float sleep_time = 1;         //amount of time between ld_cell_update
     int load_cel_val = 40;       //get the load cell value (prob not 40)
     int loop_count = 0;
 
     Motor_hopper_belt->SETSPEED(0.5);       //start hopper belt
 
-    while (load_cel_val >= min_load_cell)
+    while (std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 20 )
     {
+Motor_hopper_belt->SETSPEED(.5);
+	end = std::chrono::steady_clock::now();
         loop_count++;
         //load_cel_val = new value;           //update ld cell value
-        sleep(sleep_time);                      //wait a little bit
-        if (loop_count >= 120)
-        {
-            break;
-        }
+       // sleep(sleep_time);                      //wait a little bit
+       
     }
 
     Motor_hopper_belt->SETSPEED(0);             //stop hopper belt
@@ -160,9 +161,9 @@ void depo_start()
 
 void deposition()
 {
-    adjust_angle(new readSerial((char*)"/dev/tty/ACM0"));
+    adjust_angle(new readSerial((char*)"/dev/ttyUSB0"));
     std::cout << "angle adjusted\n Press Enter\n";
-    adjust_dist(new readSerial((char*)"/dev/tty/ACM0"));
+    adjust_dist(new readSerial((char*)"/dev/ttyUSB0"));
     std::cout << "distance adjusted\n Press Enter\n";
     depo_start();
     std::cout << "done\n";

@@ -62,11 +62,11 @@ string readSerial::getSerial(){
     while(read_buf != ',' and read_buf != ';'){
         outPutString += read_buf;
         n =  read(fd, &read_buf,1);
-        cout<<read_buf<<flush;
+//        cout<<outPutString<<endl<<flush;
     } 
     if (read_buf == ';') {
     outPutString += read_buf;
-    cout<<"semicolon Found"<<endl<<flush;
+//    cout<<"semicolon Found"<<endl<<flush;
     }
     return(outPutString);
     

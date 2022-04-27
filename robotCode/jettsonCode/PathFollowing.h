@@ -153,8 +153,8 @@ void turnMoveForward(TransformationData* current, TransformationData* goalState,
 			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0)locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0)locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0)locomotion.SETSPEED(750, 750);
+		else if (angleDiff < 0)locomotion.SETSPEED(-750, -750);
 
 		
 	}
@@ -179,7 +179,7 @@ void turnMoveForward(TransformationData* current, TransformationData* goalState,
 			locomotion.SETSPEED(0,0);
 			break;
 		}
-		else locomotion.SETSPEED(.20, .20);
+		else locomotion.SETSPEED(-750, 750);
 	}
 }
 void followPathForwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState) //goes from start to end node
@@ -245,8 +245,8 @@ void turnMoveBackwards(TransformationData* current, TransformationData* goalStat
 			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) locomotion.SETSPEED(-.30, .30);
-		else if (angleDiff < 0) locomotion.SETSPEED(.30, -.30);
+		else if (angleDiff > 0) locomotion.SETSPEED(750, 750);
+		else if (angleDiff < 0) locomotion.SETSPEED(-750, -750);
 		
 	}
 	
@@ -270,7 +270,7 @@ void turnMoveBackwards(TransformationData* current, TransformationData* goalStat
 			locomotion.SETSPEED(0,0);
 			break;
 		}
-		else locomotion.SETSPEED(-.20, -.20);
+		else locomotion.SETSPEED(750, -750);
 	}
 }
 void followPathBackwards(AStarNode* startingNode, TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState) //goes from start to end ndoe
@@ -312,8 +312,6 @@ void followPathBackwards(AStarNode* startingNode, TransformationData* current, T
 		
 		turnMoveBackwards(current, goalState, nextGoalState);
 		currentNode = nextNode;
-		
-		sleep(1);
 	}
 }
 
