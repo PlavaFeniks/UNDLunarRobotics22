@@ -19,12 +19,23 @@ class chassis
         void SWITCHMANUAL();
 
 };
-chassis::chassis(float* PID_vals){
+
+chassis::chassis(float* PID_val){
     float limits[2] = {0,1};
+    
+    float *PID_vals= (float*)malloc(sizeof(float)*4);
+
+    PID_vals[PID_P] = .4;          // should probably tune one for buckets and one for screw
+	PID_vals[PID_I] = .000;
+	PID_vals[PID_D] = .8;
+	PID_vals[PID_F] = .32;
+    
+    
+    
     __bleft = new TalonPair(RearLeft, VELOCITY, limits, PID_vals);
-    __brght = new TalonPair(RearLeft, VELOCITY, limits, PID_vals);
-    __frght = new TalonPair(RearLeft, VELOCITY, limits, PID_vals);
-    __fleft = new TalonPair(RearLeft, VELOCITY, limits, PID_vals);
+    __brght = new TalonPair(RearRight, VELOCITY, limits, PID_vals);
+    __frght = new TalonPair(FrontRight, VELOCITY, limits, PID_vals);
+    __fleft = new TalonPair(FrontLeft, VELOCITY, limits, PID_vals);
     setup(false);
     cout<<"Successfully created chassis control with velocitySettings"<<endl;
 }

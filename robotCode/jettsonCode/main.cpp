@@ -23,7 +23,6 @@
 #include <vector>
 #include <unistd.h>
 #include "/usr/include/python2.7/Python.h"
-#include "../Mining.h"
 
 #define WIDTH 90 //width of tesselated map
 #define HEIGHT 90 //height of tesselated map
@@ -43,9 +42,14 @@ Camera zed;
 
 //initializations for chassis
 #include "chassis.h"
-chassis locomotion(false);
-//deposition code
-//#include "deposition.h"
+
+
+float *PID_chassis= (float*)malloc(sizeof(float)*4);
+
+
+chassis locomotion(PID_chassis);
+#include "../Mining.h"
+#include "deposition.h" //deposition code
 
 
 //our .h Files
@@ -63,7 +67,6 @@ void makeRowIntraversable()
 
 int main(int argc, char **argv)
 {
-	
 	// Set configuration parameters
 	std::string interface;
 	interface = "can0";
@@ -71,12 +74,15 @@ int main(int argc, char **argv)
 	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
 		perror("");
 		std::_Exit(0);
-	}
-	cout << "sleeping for 10 seconds\n";
-	LimitSwitchTest();
-
-	sleep(10);
-    
+	}    
+//LimitSwitchTest();
+//return 1;	
+//depo_start();
+//return 1;
+//	MiningTime1(new readSerial((char*)"/dev/ttyUSB0"));
+//	return 1;
+deposition();
+return 1;
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
     init_parameters.coordinate_units = UNIT::CENTIMETER; // Use millimeter units (for depth measurements)
@@ -90,6 +96,8 @@ int main(int argc, char **argv)
         cout << "Error " << returned_state << ", exit program." << endl;
         return EXIT_FAILURE;
     }
+
+
     
     //initialization
 	initializeTesselatedMap();
@@ -99,7 +107,7 @@ int main(int argc, char **argv)
 	//generate map
 	getCloudAndPlane();
 	startNode = mapOfPit[0][0];
-	endNode = mapOfPit[30][0];
+	endNode = mapOfPit[15][0];
 	cmdLineOccupancyMap();
 	thiccOccupancymap(3);
 
@@ -122,9 +130,14 @@ int main(int argc, char **argv)
 	sleep(5);
 	while(true)
 	{
+		
 		getTranslationImage(&zedCurrent);
 		followPathForwards(startNode, &zedCurrent, &zedGoal, &zedNextGoal);
+		//mioning
+		MiningTime1(new readSerial((char*)"/dev/ttyUSB0"));
 		followPathBackwards(endNode, &zedCurrent, &zedGoal, &zedNextGoal);
+		//deposition
+		deposition();
 		break;	
 	}
 	
