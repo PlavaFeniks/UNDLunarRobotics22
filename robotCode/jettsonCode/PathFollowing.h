@@ -189,7 +189,7 @@ void followPath(AStarNode* startingNode, TransformationData* current, Transforma
 			continue;
 		}
 		
-		turnMove(current, goalState, nextGoalState);
+		turnMove(current, goalState, nextGoalState, isMovingForwards);
 		currentNode = nextNode;
 	}
 }
