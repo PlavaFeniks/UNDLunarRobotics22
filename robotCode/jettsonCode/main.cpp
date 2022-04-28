@@ -33,6 +33,8 @@
 #define YJETSONRELATIVETOROBOT 3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
 #define PI 3.14159265 //the latest recipe
 
+float zedPositionX = 45;
+float zedPositionY = 0;
 
 using namespace std;
 using namespace sl;
@@ -45,10 +47,9 @@ Camera zed;
 
 
 float *PID_chassis= (float*)malloc(sizeof(float)*4);
-
-
 chassis locomotion(PID_chassis);
-#include "../Mining.h"
+
+#include "Mining.h" //mining code
 #include "deposition.h" //deposition code
 
 
@@ -81,8 +82,6 @@ int main(int argc, char **argv)
 //return 1;
 //	MiningTime1(new readSerial((char*)"/dev/ttyUSB0"));
 //	return 1;
-deposition();
-return 1;
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
     init_parameters.coordinate_units = UNIT::CENTIMETER; // Use millimeter units (for depth measurements)
@@ -97,7 +96,32 @@ return 1;
         return EXIT_FAILURE;
     }
 
+	//initialization for mining and deposition
+	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");
+	TalonPair * Motor_hopper_belt = new TalonPair(7);
+	
+	 //~~~~~~~~~~~~~Initialize Motors~~~~~~~~~~~~~~~~~~~
 
+    float *limits = (float*)malloc(sizeof(float)*2);
+    float *PID_valsBuck = (float*)malloc(sizeof(float)*4);
+    float *PID_valsScrew = (float*)malloc(sizeof(float)*4);
+
+    limits[0] = 0;
+    limits[1]= 1;
+
+
+    PID_valsBuck[PID_P] = .83;          // should probably tune one for buckets and one for screw
+    PID_valsBuck[PID_I] = .000;
+    PID_valsBuck[PID_D] = .8;
+    PID_valsBuck[PID_F] = .5;
+    
+    PID_valsScrew[PID_P] = .22;          // should probably tune one for buckets and one for screw
+    PID_valsScrew[PID_I] = .000;
+    PID_valsScrew[PID_D] = .5;
+    PID_valsScrew[PID_F] = .04;
+	TalonPair* buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
+	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
+	TalonPair* screwdriver = new TalonPair(5);
     
     //initialization
 	initializeTesselatedMap();
@@ -106,8 +130,8 @@ return 1;
 	
 	//generate map
 	getCloudAndPlane();
-	startNode = mapOfPit[0][0];
-	endNode = mapOfPit[15][0];
+	startNode = mapOfPit[(int)zedPositionY][(int)zedPositionX];
+	endNode = mapOfPit[15][(int)zedPositionX];
 	cmdLineOccupancyMap();
 	thiccOccupancymap(3);
 
@@ -132,12 +156,12 @@ return 1;
 	{
 		
 		getTranslationImage(&zedCurrent);
-		followPathForwards(startNode, &zedCurrent, &zedGoal, &zedNextGoal);
+		followPath(startNode, &zedCurrent, &zedGoal, &zedNextGoal, true);
 		//mioning
-		MiningTime1(new readSerial((char*)"/dev/ttyUSB0"));
-		followPathBackwards(endNode, &zedCurrent, &zedGoal, &zedNextGoal);
+		MiningTime1(ampSerial, buckets, screwdriver);
+		followPath(endNode, &zedCurrent, &zedGoal, &zedNextGoal, false);
 		//deposition
-		deposition();
+		deposition(ampSerial, Motor_hopper_belt);
 		break;	
 	}
 	
