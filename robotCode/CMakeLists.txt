@@ -24,6 +24,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 
 # Determine processor arch for compiling
+
 if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf") # Jetson TK1 / Pi
 	set(PROCESSOR_ARCH raspberry)
 	set(TARGET_EXECUTABLES 
@@ -62,6 +63,7 @@ if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf")
 	target_link_libraries(testbed Threads::Threads)
 	target_link_libraries(testbed wiringPi)
 
+<<<<<<< HEAD
 elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu")
 	### FOR JETSON/NX build autonomy target along with defaults
 	find_package(ZED 3 REQUIRED)
@@ -71,6 +73,14 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu")
 
 	include_directories(${CUDA_INCLUDE_DIRS})
 	include_directories(${ZED_INCLUDE_DIRS})
+=======
+
+elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
+	option(LINK_SHARED_ZED "Link with the ZED SDK shared executable" ON)
+	if (NOT LINK_SHARED_ZED AND MSVC)
+		message(FATAL_ERROR "LINK_SHARED_ZED OFF : ZED SDK static libraries not available on Windows")
+	endif()
+>>>>>>> c709221fb443f4210c3a5e02e243b4c80d51afc8
 
 	link_directories(${ZED_LIBRARY_DIR})
 	link_directories(${CUDA_LIBRARY_DIRS})
@@ -93,6 +103,7 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu")
 	target_include_directories(autonomous PUBLIC ${CMAKE_SOURCE_DIR})
 
 	target_link_libraries(autonomous pthread)
+
     if (LINK_SHARED_ZED)
 		SET(ZED_LIBS ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
 	else()
