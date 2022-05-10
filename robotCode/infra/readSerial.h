@@ -7,6 +7,7 @@
 #include <error.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 using namespace std;
 
@@ -24,7 +25,7 @@ public:
 
 readSerial::readSerial(char* abosolutePath)
 {   
-    fd = open(abosolutePath, O_RDWR|O_NOCTTY); //O_NONBLOCK | O_RDONLY
+    fd = open(abosolutePath, O_RDONLY|O_NOCTTY); //O_NONBLOCK | O_RDONLY
     if (fd < 0) {
     printf("Error %i from open: %s\n", errno, strerror(errno));
     return;
@@ -61,16 +62,40 @@ string readSerial::getSerial(){
     while(read_buf != ',' and read_buf != ';'){
         outPutString += read_buf;
         n =  read(fd, &read_buf,1);
+//        cout<<outPutString<<endl<<flush;
     } 
+    if (read_buf == ';') {
+    outPutString += read_buf;
+//    cout<<"semicolon Found"<<endl<<flush;
+    }
     return(outPutString);
-
     
 
 }
 float * readSerial::getSerialVals(int value_count){
     float * float_vals = (float*)(malloc(sizeof(float) * value_count));
+    int count = 0;
     for(int i = 0; i < value_count; i++){
-        float_vals[i] = stof(getSerial());
+        string tempString = getSerial();
+        if(tempString[tempString.length() - 1] == ';' || tempString[0]==';'){
+            count++;
+            if (count != value_count){
+                return(getSerialVals(value_count));
+            }
+            else{
+                tempString = tempString.substr(0, tempString.length()- 1);
+                float_vals[i] = stof(tempString);
+            }
+        }
+        else{
+            try{ 
+                float_vals[i] = stof(tempString);
+            }
+            catch(exception e){
+                float_vals[i] = -1;
+            }
+        }
+        count ++;
     }
     
     return(float_vals);

@@ -32,6 +32,7 @@ else
     echo "Re-run command with -o to install opencv"
 fi
 
+
 #pipe input to  /etc/networks/interface file
 sudo cp $temp_home/pi/interfaces  /etc/network/interfaces
 sudo cp $temp_home/pi/robo.service /etc/systemd/system/
@@ -42,8 +43,8 @@ sudo apt-get upgrade
 
 #clone repository for CTRE's Phoenix Software < this may result in errors because CTRE likes to update cmake and shared objects>
 
-sudo git clone "https://github.com/CrossTheRoadElec/Phoenix-Linux-SocketCAN-Example.git" /tmp/Downloads/Phoenix-Linux-SocketCAN-Example
 sudo chmod 777 /usr/include
+sudo git clone "https://github.com/CrossTheRoadElec/Phoenix-Linux-SocketCAN-Example.git" home/root/Downloads/
 
 sudo python3 installPhoenix.py &
 
