@@ -33,6 +33,8 @@
 #define YJETSONRELATIVETOROBOT 3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
 #define PI 3.14159265 //the latest recipe
 
+float zedPositionX = 45;
+float zedPositionY = 0;
 
 using namespace std;
 using namespace sl;
@@ -41,8 +43,15 @@ using namespace sl;
 Camera zed;
 
 //initializations for chassis
-//#include "chassis.h"
-//chassis locomotion(false);
+#include "chassis.h"
+
+
+float *PID_chassis= (float*)malloc(sizeof(float)*4);
+chassis locomotion(PID_chassis);
+
+#include "Mining.h" //mining code
+#include "deposition.h" //deposition code
+
 
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
@@ -51,7 +60,7 @@ Camera zed;
 
 void makeRowIntraversable()
 {
-	for (int i=0; i<WIDTH; i++)
+	for (int i=0; i<10; i++)
 	{
 		mapOfPit[15][i]->isTraversable = false;
 	}
@@ -59,7 +68,6 @@ void makeRowIntraversable()
 
 int main(int argc, char **argv)
 {
-	/*
 	// Set configuration parameters
 	std::string interface;
 	interface = "can0";
@@ -67,11 +75,13 @@ int main(int argc, char **argv)
 	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
 		perror("");
 		std::_Exit(0);
-	}
-	cout << "sleeping for 10 seconds\n";
-	sleep(10);
-	*/
-    
+	}    
+//LimitSwitchTest();
+//return 1;	
+//depo_start();
+//return 1;
+//	MiningTime1(new readSerial((char*)"/dev/ttyUSB0"));
+//	return 1;
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
     init_parameters.coordinate_units = UNIT::CENTIMETER; // Use millimeter units (for depth measurements)
@@ -85,6 +95,33 @@ int main(int argc, char **argv)
         cout << "Error " << returned_state << ", exit program." << endl;
         return EXIT_FAILURE;
     }
+
+	//initialization for mining and deposition
+	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");
+	TalonPair * Motor_hopper_belt = new TalonPair(7);
+	
+	 //~~~~~~~~~~~~~Initialize Motors~~~~~~~~~~~~~~~~~~~
+
+    float *limits = (float*)malloc(sizeof(float)*2);
+    float *PID_valsBuck = (float*)malloc(sizeof(float)*4);
+    float *PID_valsScrew = (float*)malloc(sizeof(float)*4);
+
+    limits[0] = 0;
+    limits[1]= 1;
+
+
+    PID_valsBuck[PID_P] = .83;          // should probably tune one for buckets and one for screw
+    PID_valsBuck[PID_I] = .000;
+    PID_valsBuck[PID_D] = .8;
+    PID_valsBuck[PID_F] = .5;
+    
+    PID_valsScrew[PID_P] = .22;          // should probably tune one for buckets and one for screw
+    PID_valsScrew[PID_I] = .000;
+    PID_valsScrew[PID_D] = .5;
+    PID_valsScrew[PID_F] = .04;
+	TalonPair* buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
+	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
+	TalonPair* screwdriver = new TalonPair(5);
     
     //initialization
 	initializeTesselatedMap();
@@ -93,14 +130,15 @@ int main(int argc, char **argv)
 	
 	//generate map
 	getCloudAndPlane();
-	startNode = mapOfPit[0][0];
-	endNode = mapOfPit[30][0];
-	//makeRowIntraversable();
+	startNode = mapOfPit[(int)zedPositionY][(int)zedPositionX];
+	endNode = mapOfPit[15][(int)zedPositionX];
+	cmdLineOccupancyMap();
+	thiccOccupancymap(3);
+
 	FindPath(startNode);
 	
 	
 	//generate with thickening
-	thiccOccupancymap(3);
 	cmdLineOccupancyMap();
 	
 	if (argc > 1)
@@ -116,9 +154,14 @@ int main(int argc, char **argv)
 	sleep(5);
 	while(true)
 	{
+		
 		getTranslationImage(&zedCurrent);
-		followPathForwards(startNode, &zedCurrent, &zedGoal);
-		followPathBackwards(endNode, &zedCurrent, &zedGoal);
+		followPath(startNode, &zedCurrent, &zedGoal, &zedNextGoal, true);
+		//mioning
+		MiningTime1(ampSerial, buckets, screwdriver);
+		followPath(endNode, &zedCurrent, &zedGoal, &zedNextGoal, false);
+		//deposition
+		deposition(ampSerial, Motor_hopper_belt);
 		break;	
 	}
 	

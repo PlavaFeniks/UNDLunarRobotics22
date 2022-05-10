@@ -46,22 +46,15 @@ void occupancyMap()
 	//Read in the sensor data and update the average value for the cell
 	// i and j for the image points, will need to smooth the data only taking verified points
 	
-	float cellSize = 1; //to go from mm to meter
-	/*float a = groundPlane.x; 
-	float b = groundPlane.y;
-	float c = groundPlane.z;
-	float d = groundPlane.w;*/
 	for (int i=0; i<IMAGEWIDTH; i++)
 		{
 			for (int j=0; j<IMAGEHEIGHT; j++)
 			{
 				if (Xval[i][j] == NULL) continue;
 				
-				int xhere = int(*Xval[i][j]/cellSize+45);
-				int yhere = int(*Yval[i][j]/cellSize);
+				int xhere = int(*Xval[i][j]+45);
+				int yhere = int(*Yval[i][j]);
 				float zhere = *Zval[i][j];
-				
-				//cout <<xhere << "  " << yhere << "  " << zhere << "\n";
 				
 				if (xhere >= 0 and xhere < WIDTH and yhere >= 0 and yhere < HEIGHT)
 				{
@@ -156,10 +149,10 @@ void getCloudAndPlane()
 			// Reset positional tracking to align it with the floor plane frame
 			//zed.resetPositionalTracking(resetTrackingFloorFrame);
 			sl::float4 theThing = plane.getPlaneEquation();
-				gplaneA = theThing.x;
-				gplaneB = theThing.y;
-				gplaneC = theThing.z;
-				gplaneD = theThing.w;
+			gplaneA = theThing.x;
+			gplaneB = theThing.y;
+			gplaneC = theThing.z;
+			gplaneD = theThing.w;
 		}
 		else
 		{
@@ -179,11 +172,11 @@ void getCloudAndPlane()
 				point_cloud.getValue(i,j,&point_cloud_value);
 				if (std::isfinite(point_cloud_value.z))
 				{
+					Xval[i][j] = new float(point_cloud_value.x/10 + zedPositionX);
+					Yval[i][j] = new float(point_cloud_value.y/10 + zedPositionY);
 					Zval[i][j] = new float(point_cloud_value.z/10);
-					Xval[i][j] = new float(point_cloud_value.x/10);
-					Yval[i][j] = new float(point_cloud_value.y/10);
-					int x = point_cloud_value.x/10;
-					int y = point_cloud_value.y/10;
+					int x = point_cloud_value.x/10 + zedPositionX;
+					int y = point_cloud_value.y/10 + zedPositionY;
 					int z = point_cloud_value.z/10;
 					if (x >=0 and x <WIDTH and y >=0 and y <HEIGHT) mapOfPit[y][x]->setXYZ(x, y, z);
 				}

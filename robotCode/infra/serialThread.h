@@ -5,6 +5,9 @@
 pthread_mutex_t readLock;
 pthread_t ard_thread;
 float * ard_values;
+void setup_ard_thread(readSerial*);
+void* updateArd_values(void*);
+float* readArd_values();
 
 
 //Call this to have thread in the background

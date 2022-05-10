@@ -53,8 +53,8 @@ class TalonPair{
 					
 				}
 				else if ( abs(speed) < limit[0]){
-					(speed<0)? speed = -limit[0] : speed = limit[0];
-					
+					//(speed<0)? speed = -limit[0] : speed = limit[0];
+					speed = (speed<0)? -limit[0] : limit[0];
 				}
 				//set the speed here
 				mc->Set(ControlMode::PercentOutput, speed);
@@ -64,10 +64,11 @@ class TalonPair{
 
 			case VELOCITY:
 				mc->Set(ControlMode::Velocity, speed);
-				cout<<"Velocity set to ###INSERT DOCUMENTATION ON VELOCITY HERE"<<endl;
+				//cout<<"Velocity set to ###INSERT DOCUMENTATION ON VELOCITY HERE"<<endl;
 				break;
+
 			case POSITION:
-				std::cout<<"Position value set to ###INSERT INFORMATION FROM THE THING HERE###"<<endl;
+				//std::cout<<"Position value set to ###INSERT INFORMATION FROM THE THING HERE###"<<endl;
 				mc->Set(ControlMode::Position, speed);
 				break;
 			
@@ -144,14 +145,14 @@ TalonPair::TalonPair(int motor, int ControlMode, float *limits, float* pidf_gain
 
 	//Configs PID feedback gains ans sensor devices
 	//Uses quadEncode for feedback devices
-	mc->ConfigSelectedFeedbackSensor(TalonSRXFeedbackDevice::QuadEncoder, 0, 22);
-	mc->Config_kP(0, pidf_gains[PID_P], 22);
-	mc->Config_kI(0, pidf_gains[PID_I], 22);
-	mc->Config_kD(0, pidf_gains[PID_D], 22);
-	mc->Config_kF(0, pidf_gains[PID_F], 22);
+	mc->ConfigSelectedFeedbackSensor(TalonSRXFeedbackDevice::QuadEncoder, 0, 500);
+	mc->Config_kP(0, pidf_gains[PID_P], 500);
+	mc->Config_kI(0, pidf_gains[PID_I], 500);
+	mc->Config_kD(0, pidf_gains[PID_D], 500);
+	mc->Config_kF(0, pidf_gains[PID_F], 500);
 	mc->SetSensorPhase(true);
 
-	
+	cout<<"Succesfully Spawned motorController " << motor<<endl;
 
 }
 
