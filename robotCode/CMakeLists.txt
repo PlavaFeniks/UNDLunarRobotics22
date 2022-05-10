@@ -1,6 +1,6 @@
 # Project's name
 cmake_minimum_required(VERSION 3.1)
-PROJECT ( example C CXX )
+PROJECT ( LunaBotics C CXX )
 
 
 
@@ -21,9 +21,18 @@ find_package (Threads REQUIRED)
 find_package(SDL2 REQUIRED)
 
 # The following folder will be included
-include_directories("/usr/include/ctre/")
 set(CMAKE_CXX_STANDARD 17)
 add_executable(example ${PROJECT_SOURCE_DIR}/example.cpp)
+
+
+# Determine processor arch for compiling
+if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf") # Jetson TK1 / Pi
+	set(PROCESSOR_ARCH raspberry)
+elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu") # Jetson TX2
+	set(PROCESSOR_ARCH jetsontx)
+else()
+ 	set(PROCESSOR_ARCH x86-64)
+endif()
 
 
 if (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "arm-linux-gnueabihf") # Jetson TK1 / Pi

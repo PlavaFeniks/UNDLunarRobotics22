@@ -5,7 +5,7 @@ This executable is designed to facillitate the development and testing of variou
     c. Because you may not have access to the robot due to location constraints
 
 */
-
+#pragma once
 #include "movement.h"
 #include "infra/readSerial.h"
 

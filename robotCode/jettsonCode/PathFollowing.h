@@ -1,5 +1,5 @@
-#define PI 3.14159265
 //https://github.com/stereolabs/zed-examples/blob/master/positional%20tracking/cpp/src/main.cpp
+const float PI = 3.14159265
 float x,y,z;
 float rx, ry, rz;
 void getTranslationImage(TransformationData* updateOrient) //sets position and angle change using images

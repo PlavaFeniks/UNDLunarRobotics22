@@ -11,3 +11,5 @@ robotCode/jettsonCode/CMakeFiles
 robotCode/jettsonCode/cmake_install.cmake
 robotCode/jettsonCode/Makefile
 robotCode/jettsonCode/CMakeCache.txt
+
+*.gch

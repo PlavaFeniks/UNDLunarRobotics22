@@ -43,6 +43,8 @@ sudo apt-get upgrade
 #clone repository for CTRE's Phoenix Software < this may result in errors because CTRE likes to update cmake and shared objects>
 
 sudo git clone "https://github.com/CrossTheRoadElec/Phoenix-Linux-SocketCAN-Example.git" /tmp/Downloads/Phoenix-Linux-SocketCAN-Example
+sudo chmod 777 /usr/include
+
 sudo python3 installPhoenix.py &
 
 echo temp_home=""

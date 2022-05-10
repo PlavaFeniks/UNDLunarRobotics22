@@ -23,6 +23,7 @@
 #include <vector>
 #include <unistd.h>
 #include "/usr/include/python2.7/Python.h"
+#include <chassis.h>
 
 #define WIDTH 90 //width of tesselated map
 #define HEIGHT 90 //height of tesselated map

@@ -18,8 +18,8 @@ def moveFiles(download_dir: Path, install_dir: Path, obj_dir: Path) -> None:
 def main() -> None:
     # builds out function call
     home = Path("/tmp")
-    #user = getuser()
-    download_dir = home  / "Downloads"
+    user = getuser()
+    download_dir =Path( f"/home/{user}/Downloads/tmp" ) 
     install_dir = Path("/usr/include/ctre")
 
     phoenix_library = download_dir / "Phoenix-Linux-SocketCAN-Example" / "include"
