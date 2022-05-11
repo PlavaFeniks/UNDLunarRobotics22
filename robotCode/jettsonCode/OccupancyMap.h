@@ -1,5 +1,3 @@
-double OccThresh = .5f; // -1 to 1 where .5 is 75% chance it's occupied and 1 is totally tubularly occupied
-
 float ***Zval = new float**[IMAGEWIDTH];//float Zval[1280][720];
 float ***Xval = new float**[IMAGEWIDTH];//float Xval[1280][720];
 float ***Yval = new float**[IMAGEWIDTH];//float Yval[1280][720];
@@ -36,13 +34,10 @@ float gplaneB;
 float gplaneC;
 float gplaneD;
 
-double Dist;
-double threshVal = 20.0;
-
-
-void occupancyMap()
+double OccThresh = 1.0f; // -1 to 1 where .5 is 75% chance it's occupied and 1 is totally tubularly occupied
+void occupancyMap(int scale=10, double threshVal=100)
 {
-	
+
 	//Read in the sensor data and update the average value for the cell
 	// i and j for the image points, will need to smooth the data only taking verified points
 	
@@ -52,7 +47,7 @@ void occupancyMap()
 			{
 				if (Xval[i][j] == NULL) continue;
 				
-				int xhere = int(*Xval[i][j]+45);
+				int xhere = int(*Xval[i][j]);
 				int yhere = int(*Yval[i][j]);
 				float zhere = *Zval[i][j];
 				
@@ -62,9 +57,9 @@ void occupancyMap()
 					mapOfPit[yhere][xhere]->Nobs ++;
 					mapOfPit[yhere][xhere]->Zval = mapOfPit[yhere][xhere]->Zsum/float(mapOfPit[yhere][xhere]->Nobs);
 					
-					Dist = abs(gplaneA*(*Xval[i][j])*10+gplaneB*(*Yval[i][j])*10+gplaneC*(*Zval[i][j])*10+gplaneD)/(sqrt(pow(gplaneA,2)+pow(gplaneB,2)+pow(gplaneC,2)));
-					mapOfPit[yhere][xhere]->Disthere = Dist;
-					if (abs(Dist) >= threshVal)
+					float dist = abs(gplaneA*(*Xval[i][j])*scale+gplaneB*(*Yval[i][j])*scale+gplaneC*(*Zval[i][j])*scale+gplaneD)/(sqrt(pow(gplaneA,2)+pow(gplaneB,2)+pow(gplaneC,2)));
+					mapOfPit[yhere][xhere]->Disthere = dist;
+					if (abs(dist) >= threshVal)
 					{
 						mapOfPit[yhere][xhere]->OBS --;
 					}else
@@ -113,7 +108,7 @@ void occupancyMap()
 
 //gets ground plane and point cloud
 //affects global variables
-void getCloudAndPlane()
+void getCloudAndPlane(int scale)
 {
 	// Set runtime parameters after opening the camera
     RuntimeParameters runtime_parameters;
@@ -172,17 +167,17 @@ void getCloudAndPlane()
 				point_cloud.getValue(i,j,&point_cloud_value);
 				if (std::isfinite(point_cloud_value.z))
 				{
-					Xval[i][j] = new float(point_cloud_value.x/10 + zedPositionX);
-					Yval[i][j] = new float(point_cloud_value.y/10 + zedPositionY);
-					Zval[i][j] = new float(point_cloud_value.z/10);
-					int x = point_cloud_value.x/10 + zedPositionX;
-					int y = point_cloud_value.y/10 + zedPositionY;
-					int z = point_cloud_value.z/10;
+					Xval[i][j] = new float(point_cloud_value.x/scale + zedPositionX);
+					Yval[i][j] = new float(point_cloud_value.y/scale + zedPositionY);
+					Zval[i][j] = new float(point_cloud_value.z/scale);
+					int x = int(*Xval[i][j]);
+					int y = int(*Yval[i][j]);
+					int z = int(*Zval[i][j]);
 					if (x >=0 and x <WIDTH and y >=0 and y <HEIGHT) mapOfPit[y][x]->setXYZ(x, y, z);
 				}
 			}
 		}
-		occupancyMap();
+		occupancyMap(scale);
 		k += 1;       
 	}
 	cout << "point cloud defined\n";
@@ -251,9 +246,28 @@ void cmdLineOccupancyMap() //displays the occupancy map in cmdline
 		{
 			// /*
 			if (mapOfPit[i][j]->child != NULL) cout << "\x1B[33m-";
-			else if (mapOfPit[i][j] == endNode) cout << "\x1B[94mx";			
+			else if (mapOfPit[i][j] == endNode) cout << "\x1B[94me";
+			else if (mapOfPit[i][j] == startNode) cout << "\x1B[95ms";				
 			else if (mapOfPit[i][j]->isTraversable) cout << " ";//if traversable
 			else cout << "\x1B[91m1"; //if not traversable
+			cout << "\033[0m";
+		}
+		cout << "\n";
+	}
+	cout << "end of map\n";
+	sleep(1);
+}
+
+void cmdLineNobs()
+{
+	cout << "start of map\n";
+	for (int i=HEIGHT-1; i>=0; i--)
+	{
+		for (int j=0; j<WIDTH; j++)
+		{
+			// /*
+			if (mapOfPit[i][j]->Nobs > 0) cout << "\x1B[91m1"; //if not traversable
+			else cout << " ";
 			cout << "\033[0m";
 		}
 		cout << "\n";
