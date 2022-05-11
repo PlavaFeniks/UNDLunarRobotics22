@@ -1,8 +1,8 @@
 #define Phoenix_No_WPI // remove WPI dependencies
 #include <iostream>
-#include "ctre/Phoenix.h"
-#include "ctre/phoenix/platform/Platform.h"
-#include "ctre/phoenix/unmanaged/Unmanaged.h"
+#include <ctre/Phoenix.h>
+#include <ctre/phoenix/platform/Platform.h>
+#include <ctre/phoenix/unmanaged/Unmanaged.h>
 
 using namespace ctre::phoenix;
 using namespace ctre::phoenix::platform;
@@ -42,7 +42,7 @@ class TalonPair{
 
 	void SETSPEED(double speed){
 		if(!(isManual)){
-			ctre::phoenix::unmanaged::FeedEnable(200);
+			ctre::phoenix::unmanaged::Unmanaged::FeedEnable(200);
 		}
 		switch (motorType){
 			case PERCENT:

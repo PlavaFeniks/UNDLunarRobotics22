@@ -5,10 +5,8 @@ This executable is designed to facillitate the development and testing of variou
     c. Because you may not have access to the robot due to location constraints
 
 */
-
-
+#pragma once
 #include <chrono>
-
 #include "infra/serialThread.h"
 #include "movement.h"
 #include <string>
