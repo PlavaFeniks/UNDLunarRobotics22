@@ -47,7 +47,7 @@ using namespace sl;
 // Create a ZED camera object
 Camera zed;
 
-/*
+
 //initializations for chassis
 #include "chassis.h"
 float *PID_chassis= (float*)malloc(sizeof(float)*4);
@@ -58,14 +58,14 @@ TalonPair* buckets;
 TalonPair* screwdriver;
 
 #include "deposition.h" //deposition code
-*/
+
 
 //our .h Files
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
 #include "PathFollowing.h" //contains code for following a path
 #include "detect_markers.hpp"
-/*
+
 void miningSetup()
 {
     float *limits = (float*)malloc(sizeof(float)*2);
@@ -87,7 +87,7 @@ void miningSetup()
 	buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
 	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
 	screwdriver = new TalonPair(5);
-}*/
+}
 
 void makeRowIntraversable()
 {
@@ -104,7 +104,7 @@ void fiducialTest()
 
 int main(int argc, char **argv)
 {
-	/*
+	
 	// Set configuration parameters
 	std::string interface;
 	interface = "can0";
@@ -120,25 +120,37 @@ int main(int argc, char **argv)
 	TalonPair * Motor_hopper_belt = new TalonPair(7);
 	
 	
-	if (argc > 1 and  strcmp(argv[1], "mining"))
+	if (argc > 1 and  strcmp(argv[1], "mining") == 0)
 	{
+		
 		miningSetup();
-		MiningTime1(ampSerial, buckets, screwdriver);
+		actuatorPos(ampSerial,1.97) ;
+		sleep(1);
+		actuatorPos(ampSerial,0);
+		sleep(1);
+		actuatorPos(ampSerial,1) ;
+		sleep(1);
+		actuatorPos(ampSerial,1.4) ;
+		sleep(1);
+		actuatorPos(ampSerial,.8) ;
+		
+
+		//MiningTime1(ampSerial, buckets, screwdriver);
 		return 1;
 	}
-	else if (argc > 1 and  strcmp(argv[1], "limitSwitchTest"))
+	else if (argc > 1 and  strcmp(argv[1], "limitSwitchTest") == 0)
 	{
 		LimitSwitchTest();
 		return 1;
 	}
-	else if (argc > 1 and  strcmp(argv[1], "deposition"))
+	else if (argc > 1 and  strcmp(argv[1], "deposition") == 0)
 	{
 		//deposition
 		deposition(ampSerial, Motor_hopper_belt);
 	}
-	*/
 	fiducial(argc, argv);
 	return 1;
+  
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
     init_parameters.coordinate_units = UNIT::CENTIMETER; // Use millimeter units (for depth measurements)

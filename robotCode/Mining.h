@@ -12,12 +12,88 @@
 #include <JetsonGPIO.h>
 
 
+#define hallEffect 15 // Switch repersenting digger is fully lowered
+
 #define LSwitch 18 // Switch repersenting digger is fully lowered
 #define HSwitch 22// Switch representing digger is fully raised
 
+#define homePos .5
 using namespace GPIO;
 using namespace std;
 
+void actuatorPos(readSerial* ampSerial,float setPOS){
+
+
+	TalonPair * actuatorR;
+	TalonPair * actuatorL;
+
+	actuatorR = new TalonPair(8);
+    actuatorL = new TalonPair(9);
+
+    float *arr;
+    arr = new float(10);            
+    arr = ampSerial->getSerialVals(10);
+	arr = ampSerial->getSerialVals(10);
+    float rightPos = arr[6]; 	//
+    float leftPos = arr[7];	//
+
+    float speedPercent = .9;
+
+    cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
+
+    while(true){
+		arr = ampSerial->getSerialVals(10);
+		rightPos = arr[6]; 	//
+		leftPos = arr[7];	//
+        if ( rightPos>setPOS){
+			while(true)
+			{
+				cout << "first\n";
+
+				arr = ampSerial->getSerialVals(10);
+				rightPos = arr[6]; 	//
+				leftPos = arr[7];
+				actuatorR->SETSPEED(speedPercent); // set speed for the two motors
+				actuatorL->SETSPEED(speedPercent); // set speed for the two motors
+				
+				if(rightPos<(setPOS+.01) and leftPos<(setPOS+.01)  ){
+					actuatorR->SETSPEED(0); // set speed for the two motors
+					actuatorL->SETSPEED(0);
+					arr = ampSerial->getSerialVals(10);
+					rightPos = arr[6]; 	//
+					leftPos = arr[7];
+					
+					cout<<"END Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
+					return;
+
+				}
+			}
+        }
+        else if ( rightPos<setPOS){
+			while(true)
+				{
+				cout << "second\n";
+
+				arr = ampSerial->getSerialVals(10);
+				rightPos = arr[6]; 	//
+				leftPos = arr[7];
+				actuatorR->SETSPEED(-speedPercent); // set speed for the two motors
+				actuatorL->SETSPEED(-speedPercent); // set speed for the two motors
+				cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
+				if(rightPos>(setPOS-.01)and leftPos>(setPOS-.01)){
+					actuatorR->SETSPEED(0); // set speed for the two motors
+					actuatorL->SETSPEED(0);
+					arr = ampSerial->getSerialVals(10);
+					rightPos = arr[6]; 	//
+					leftPos = arr[7];
+					
+					cout<<"END Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
+					return;
+				}
+			}			
+        }
+    }
+}
 void LimitSwitchTest(){
 
 
@@ -57,6 +133,110 @@ void LimitSwitchTest(){
 		}
 	}
 }
+
+void preMining(readSerial* ampSerial, TalonPair* buckets, TalonPair* screwdriver){
+
+	GPIO::cleanup();
+    //signal(SIGINT, signalHandler);
+    GPIO::setmode(GPIO::BOARD);
+
+
+    GPIO::setup(LSwitch, GPIO::IN);
+	GPIO::setup(hallEffect, GPIO::IN);
+    GPIO::setup(HSwitch, GPIO::IN);
+
+	int hallBoi;
+
+	actuatorPos(ampSerial,1.00);
+
+    int BucketSpeed = 350; // quad speed = .1/60*4096*RPM/gearbox. Efficiency speed is 12150 rpm btw
+	float ScrewSpeed = -.3;
+
+
+	// initialize timer stuff
+
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+
+	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() > 10){
+
+		end = std::chrono::steady_clock::now();
+		buckets->SETSPEED(BucketSpeed); // set speed for the two motors
+		screwdriver->SETSPEED(ScrewSpeed); 
+
+	}
+
+	actuatorPos(ampSerial,.70);
+	begin = std::chrono::steady_clock::now();
+	end = std::chrono::steady_clock::now();
+
+	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() > 10){
+
+		end = std::chrono::steady_clock::now();
+		buckets->SETSPEED(BucketSpeed); // set speed for the two motors
+		screwdriver->SETSPEED(ScrewSpeed); 
+
+	}
+
+	actuatorPos(ampSerial,.35);
+	begin = std::chrono::steady_clock::now();
+	end = std::chrono::steady_clock::now();
+
+	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() > 10){
+
+		end = std::chrono::steady_clock::now();
+		buckets->SETSPEED(BucketSpeed); // set speed for the two motors
+		screwdriver->SETSPEED(ScrewSpeed); 
+
+	}
+
+
+
+}
+
+
+void undeployBoi(readSerial* ampSerial,TalonPair* buckets, TalonPair* screwdriver){
+
+GPIO::setup(hallEffect, GPIO::IN);
+
+int switchL;
+int switchH;
+int hallBoi;
+
+
+hallBoi =GPIO::input(hallEffect); //lower limit switch
+switchL = GPIO::input(LSwitch); //lower limit switch
+switchH = GPIO::input(HSwitch); //upper limit switch
+
+
+int BucketSpeed = 350;
+float ScrewSpeed = -.3;
+
+	if(switchH !=0){
+
+		screwdriver->SETSPEED(-ScrewSpeed);
+		switchH = GPIO::input(HSwitch); //upper limit switch
+
+		if (switchL == 0){
+			cout<<"direction is set wrong/wtf"<<endl;
+			return;
+		}
+
+	}
+
+	while ( hallBoi != 0){
+		hallBoi =GPIO::input(hallEffect); //lower limit switch
+
+		buckets->SETSPEED(BucketSpeed);
+	}
+
+actuatorPos(ampSerial,homePos);
+
+return;
+
+}
+
 
 
 void MiningTime1(readSerial* ampSerial, TalonPair* buckets, TalonPair* screwdriver){
@@ -110,13 +290,15 @@ void MiningTime1(readSerial* ampSerial, TalonPair* buckets, TalonPair* screwdriv
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	
 	//run belts and screw for x amount of seconds
+	/*
 	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5)
 	{
 		screwdriver->SETSPEED(ScrewSpeed);
 		buckets->SETSPEED(BucketSpeed);
 		end = std::chrono::steady_clock::now();
 	}		
-	
+	*/
+
 	//main logic loop
 	while(true)
 	{
@@ -216,6 +398,7 @@ void MiningTime1(readSerial* ampSerial, TalonPair* buckets, TalonPair* screwdriv
 				switchH = GPIO::input(HSwitch);
 				screwdriver->SETSPEED(-ScrewSpeed);
 				buckets->SETSPEED(BucketSpeed);
+				
 				if (switchH == 0)
 				{
 					screwdriver->SETSPEED(0);
@@ -228,6 +411,9 @@ void MiningTime1(readSerial* ampSerial, TalonPair* buckets, TalonPair* screwdriv
 		
 	
 }
+
+
+
 
 /////////////////////
 //dead function
@@ -243,18 +429,6 @@ float hopperLoad(readSerial* ampSerial){
     return Regolith;
 }
 */
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
