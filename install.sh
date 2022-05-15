@@ -20,14 +20,21 @@ if $o_flag;
 then
     cd ~/Downloads
 
-    wget -O ~/Downloads/opencv.zip https://github.com/opencv/opencv/archive/4.x.zip
-    wget -O ~/Downloads/opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.x.zip
+
+
+    git clone https://github.com/opencv/opencv.git
+    git clone https://github.com/opencv/opencv_contrib.git
     unzip opencv.zip
     unzip opencv_contrib.zip
 
     mkdir -p ~/Downloads/build && cd ~/Downloads/build
-    cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.x/modules ../opencv-4.x
-    cmake --build .
+    cmake -DCMAKE_BUILD_TYPE=RELEASE
+    cmake -DOPENCV_INSTALL_PREFIX=/usr/local
+    cmake -DOPENCV_GENERATE_PKGCONFIG=ON \
+    cmake -DOPENCV_EXTRA_MODULES_PATH=~/Downloads/opencv_contrib/modules
+    cmake ..
+    make -j6
+    sudo make install
 else 
     echo "Re-run command with -o to install opencv"
 fi
@@ -43,10 +50,10 @@ sudo apt-get upgrade
 
 #clone repository for CTRE's Phoenix Software < this may result in errors because CTRE likes to update cmake and shared objects>
 
-sudo chmod 777 /usr/include
-sudo git clone "https://github.com/CrossTheRoadElec/Phoenix-Linux-SocketCAN-Example.git" home/root/Downloads/
+#sudo chmod 777 /usr/include
+#sudo git clone "https://github.com/CrossTheRoadElec/Phoenix-Linux-SocketCAN-Example.git" home/root/Downloads/
 
-sudo python3 installPhoenix.py &
+#sudo python3 installPhoenix.py &
 
 echo temp_home=""
 
