@@ -67,13 +67,15 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu")
 	### FOR JETSON/NX build autonomy target along with defaults
 	find_package(ZED 3 REQUIRED)
 	find_package(CUDA ${ZED_CUDA_VERSION} EXACT REQUIRED)
+	find_package(OpenCV 4.5.4 REQUIRED)
 
 	add_executable(autonomous ${PROJECT_SOURCE_DIR}/jettsonCode/main.cpp)
-
+	#add_executable(detect_markers ${PROJECT_SOURCE_DIR}/jettsonCode/detect_markers.cpp)
 
 	link_directories(${ZED_LIBRARY_DIR})
 	link_directories(${CUDA_LIBRARY_DIRS})
-
+	link_directories(${OpenCV_LIBRARY_DIRS})
+	include_directories(${OpenCV_INCLUDE_DIRS})
 
 	option(LINK_SHARED_ZED "Link with the ZED SDK shared executable" ON)
 	if(COMMAND cmake_policy)
@@ -86,13 +88,21 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu")
 	
 	set(PHOENIX_LIBS_DIR ${PHOENIX_LIBRARY_PATH}/${PROCESSOR_ARCH})
 
-    target_link_libraries(autonomous ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
+	target_link_libraries(autonomous ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
 	target_link_libraries(autonomous ${PHOENIX_LIBS_DIR}/libCTRE_Phoenix.so)
 
 	target_include_directories(autonomous PUBLIC ${CMAKE_SOURCE_DIR})
-
+	target_include_directories(autonomous PUBLIC ${CUDA_INCLUDE_DIRS})
+	target_include_directories(autonomous PUBLIC ${ZED_INCLUDE_DIRS})
+	target_include_directories(autonomous PUBLIC ${OpenCV_INCLUDE_DIRS})	
+	
+	
+	#target_include_directories(detect_markers PUBLIC /usr/local/include/opencv4/opencv2/aruco.hpp)
 	target_link_libraries(autonomous pthread)
-
+	#include_directories(${OpenCV_INCLUDE_DIRS})
+	#target_link_libraries(detect_markers ${OpenCV_LIBS})
+	target_sources(autonomous PUBLIC ${PROJECT_SOURCE_DIR}/jettsonCode/detect_markers.cpp)
+	target_link_libraries(autonomous ${OpenCV_LIBS})
     if (LINK_SHARED_ZED)
 		SET(ZED_LIBS ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
 	else()

@@ -96,6 +96,20 @@ void initializeTesselatedMap()
 	}
 }
 
+void resetAStarTesselatedMap()
+{
+	//sets it up for another path to be plotted
+	for (int i=0; i< HEIGHT; i++)
+	{
+		mapOfPit[i] = new AStarNode*[WIDTH];
+		for (int j=0; j<WIDTH; j++)
+		{
+			mapOfPit[i][j]->isClose	= false; //set 0 to height
+		}
+	}
+}
+
+
 void definePath(AStarNode* currentNode) //define path from startNode to EndNode
 {
 	if (currentNode->parent == NULL)

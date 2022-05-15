@@ -1,7 +1,7 @@
 //https://github.com/stereolabs/zed-examples/blob/master/positional%20tracking/cpp/src/main.cpp
-const float PI = 3.14159265
-const int ERRORRATEDISTANCE = 2;
-const int ERRORRATEANGLE = 1;
+float PI = 3.14159265;
+int ERRORRATEDISTANCE = 2;
+int ERRORRATEANGLE = 1;
 
 void getTranslationImage(TransformationData* updateOrient, bool isMovingForward = true) //sets position and angle change using images
 {   
@@ -176,13 +176,13 @@ bool followPath(AStarNode* startingNode, TransformationData* current, Transforma
 	
 	while(currentNode != NULL)
 	{
-		AStarNode* nextNode = (isMovingForwards) ? currentNode->child : currentNode->parent;
+		AStarNode* nextNode = currentNode->child; //(isMovingForwards) ? currentNode->child : currentNode->parent;
 		
 		if (nextNode ==NULL) {cout << "done\n";break;}
 		goalState->tx = nextNode->x;
 		goalState->ty = nextNode->y;
 		
-		AStarNode* nextNextNode = (isMovingForwards) ? currentNode->child : currentNode->parent;
+		AStarNode* nextNextNode = currentNode->child; //(isMovingForwards) ? currentNode->child : currentNode->parent;
 		if (nextNextNode == NULL)
 		{
 			nextGoalState->tx = goalState->tx + (goalState->tx - currentNode->x);

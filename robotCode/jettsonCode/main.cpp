@@ -23,7 +23,6 @@
 #include <vector>
 #include <unistd.h>
 #include "/usr/include/python2.7/Python.h"
-#include <chassis.h>
 
 #define WIDTH 90 //width of tesselated map
 #define HEIGHT 90 //height of tesselated map
@@ -32,9 +31,14 @@
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
 #define XJETSONRELATIVETOROBOT -3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
 #define YJETSONRELATIVETOROBOT 3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
-#define PI 3.14159265 //the latest recipe
 
-float zedPositionX = 45; //starting position and position from fiducial
+float fiducialPositionX = 0;
+float fiducialPositionY = 0;
+
+float depositionX = 0;
+float depositionY = 0;
+
+float zedPositionX = 45; //position from fiducial
 float zedPositionY = 0;
 
 using namespace std;
@@ -60,7 +64,7 @@ TalonPair* screwdriver;
 #include "AStarCode.h" //contains all code pertaining to AStar algorithm
 #include "OccupancyMap.h" //contains all relevant occupancy map code
 #include "PathFollowing.h" //contains code for following a path
-
+#include "detect_markers.hpp"
 /*
 void miningSetup()
 {
@@ -93,6 +97,10 @@ void makeRowIntraversable()
 	}
 }
 
+void fiducialTest()
+{
+	//fiducial();
+}
 
 int main(int argc, char **argv)
 {
@@ -129,7 +137,8 @@ int main(int argc, char **argv)
 		deposition(ampSerial, Motor_hopper_belt);
 	}
 	*/
-
+	fiducial(argc, argv);
+	return 1;
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
     init_parameters.coordinate_units = UNIT::CENTIMETER; // Use millimeter units (for depth measurements)
@@ -189,13 +198,16 @@ int main(int argc, char **argv)
 			//redo A*
 			continue;
 		}
-		//mioning
+		//mining
 		//MiningTime1(ampSerial, buckets, screwdriver);
 		
 		//redu a* where
+		startNode = mapOfPit[(int)zedCurrent.ty][(int)zedCurrent.tx];
+		endNode = mapOfPit[(int)depositionY+3][(int)depositionX];
+		FindPath(startNode);
 		while(true)
 		{
-			if (followPath(endNode, &zedCurrent, &zedGoal, &zedNextGoal, false) == false)
+			if (followPath(startNode, &zedCurrent, &zedGoal, &zedNextGoal, false) == false)
 			{
 				unstuckRobot(false);
 				//localize with fiducial
