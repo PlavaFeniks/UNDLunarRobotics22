@@ -1,8 +1,10 @@
+
 //If the CANAble doesn't switch to active (blue -> green) run `./run.sh` 
 //from the ~/Documents/gitrepos/UNDLunarRobotics
 
 // what to run
 // ~/Documents/gitrepos/UNDLunarRobotics22/robotCode$ sudo ./bin/autonomous mining
+
 
 #include <iostream>
 
@@ -46,7 +48,7 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
     float rightPos = arr[6]; 	//
     float leftPos = arr[7];	//
 
-    float speedPercent = .8;
+    float speedPercent = .9;
 
     cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
 
@@ -57,7 +59,7 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
         if ( rightPos>setPOS){
 			while(true)
 			{
-				//cout << "first\n";
+				cout << "first\n";
 
 				arr = ampSerial->getSerialVals(10);
 				rightPos = arr[6]; 	
@@ -82,7 +84,7 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
         else if ( rightPos<setPOS){
 			while(true)
 				{
-				//cout << "second\n";
+				cout << "second\n";
 
 				arr = ampSerial->getSerialVals(10);
 				rightPos = arr[6]; 	//
@@ -178,17 +180,15 @@ void LimitSwitchTest(){
     GPIO::setup(LSwitch, GPIO::IN);
 	GPIO::setup(HSwitch, GPIO::IN);
 	GPIO::setup(hallEffect, GPIO::IN);
-    
 
 	int switchL;
 	int switchH;
-	int hallBoi;
+
     
     
 	while(true)
 	{
 	
-		
 		switchL = GPIO::input(LSwitch);
 		switchH = GPIO::input(HSwitch);
 		hallBoi = GPIO::input(hallEffect);
@@ -205,7 +205,6 @@ void LimitSwitchTest(){
 			//std::_Exit(1);
 			//return;
 		}
-		
 		else if (hallBoi == 0 )
 		{
 				cout<<"Halleffect"<<endl;
@@ -213,7 +212,6 @@ void LimitSwitchTest(){
 		}
 		else {
 			cout<<"neither Pressed" << endl;
-				
 		}
 	}
 }

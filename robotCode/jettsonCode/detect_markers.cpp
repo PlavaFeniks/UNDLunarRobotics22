@@ -43,7 +43,6 @@ the use of this software, even if advised of the possibility of such damage.
 #include <iostream>
 #include "aruco_samples_utility.hpp"
 
-
 using namespace std;
 using namespace cv;
 
@@ -67,7 +66,6 @@ const char* keys  =
         "{refine   |       | Corner refinement: CORNER_REFINE_NONE=0, CORNER_REFINE_SUBPIX=1,"
         "CORNER_REFINE_CONTOUR=2, CORNER_REFINE_APRILTAG=3}";
 }
-tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv);
 
 void fiducial(int argc, char **argv)
 {
@@ -98,7 +96,7 @@ void fiducial(int argc, char **argv)
 tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
 {
     vector< Vec3d > rvecs, tvecs;
-        
+
     CommandLineParser parser(argc, argv, keys);
     parser.about(about);
 	Mat camMatrix = (Mat1d(3, 3) << 1364.1, 0, 0, 0, 1360.8, 0, 1004.9, 511.6639, 1);
@@ -124,7 +122,7 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
         bool readOk = dictionary->aruco::Dictionary::readDictionary(fs.root());
         if(!readOk) {
             cerr << "Invalid detector parameters file" << endl;
-            return make_tuple(rvecs, tvecs, false);
+            return;
         }
     }
 
@@ -143,7 +141,7 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
 
     if(!parser.check()) {
         parser.printErrors();
-        return make_tuple(rvecs, tvecs, false);
+        return;
     }
 
     
@@ -152,12 +150,12 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
         bool readOk = dictionary->aruco::Dictionary::readDictionary(fs.root());
         if(!readOk) {
             std::cerr << "Invalid dictionary file" << std::endl;
-            return make_tuple(rvecs, tvecs, false);
+            return;
         }
     }
     
     
-	cv::VideoCapture inputVideo("/dev/video0");
+cv::VideoCapture inputVideo("/dev/video2");
 
     int waitTime;
     
@@ -184,11 +182,12 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
         vector< int > ids;
         vector< vector< Point2f > > corners, rejected;
         
+        vector< Vec3d > rvecs, tvecs;
         // detect markers and estimate pose
         aruco::detectMarkers(image, dictionary, corners, ids, detectorParams, rejected);
         
         
-       if(ids.size() > 0)
+       // if(estimatePose && ids.size() > 0)
             aruco::estimatePoseSingleMarkers(corners, markerLength, camMatrix, distCoeffs, rvecs, tvecs);
             
         // draw results
@@ -196,12 +195,7 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
         if(ids.size() > 0) {
             aruco::drawDetectedMarkers(imageCopy, corners, ids);
             for(unsigned int i = 0; i < ids.size(); i++)
-            {
-				cv::drawFrameAxes(imageCopy, camMatrix, distCoeffs, rvecs[i], tvecs[i], 1, 2);
-			}
-			cout << endl;
-			return make_tuple(rvecs, tvecs, true);
-			//break;
+				cv::drawFrameAxes(imageCopy, camMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 1.5f, 2);
         }
         //imshow("out", imageCopy);
         

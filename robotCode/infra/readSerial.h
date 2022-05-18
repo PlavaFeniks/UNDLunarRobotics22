@@ -63,7 +63,7 @@ string readSerial::getSerial(){
     while(read_buf != ',' and read_buf != ';'){
         outPutString += read_buf;
         n =  read(fd, &read_buf,1);
-        //cout<<outPutString<<endl<<flush;
+//        cout<<outPutString<<endl<<flush;
     } 
     if (read_buf == ';') {
     outPutString += read_buf;

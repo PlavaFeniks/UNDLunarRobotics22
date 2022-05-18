@@ -87,6 +87,7 @@ void miningSetup()
     PID_valsScrew[PID_F] = .04;
 	//buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
 	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
+
 	//screwdriver = new TalonPair(5);
 	cout<<"miningSetup Complete "<<endl;
 }
@@ -99,14 +100,28 @@ void makeRowIntraversable()
 	}
 }
 
+void fiducialTest()
+{
+	//fiducial();
+}
 
 int main(int argc, char **argv)
 {
-	// Set configuration parameters
 	
+	// Set configuration parameters
+	std::string interface;
+	interface = "can0";
+	int temp; 
+	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
+		perror("");
+		std::_Exit(0);
+	}
+
+
 	//initialization for mining and deposition
-	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");//= new readSerial((char*)"/dev/ttyUSB0");
-	TalonPair * Motor_hopper_belt ;//= new TalonPair(7);
+	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");
+	TalonPair * Motor_hopper_belt = new TalonPair(7);
+	
 	
 	if (argc > 1 and  strcmp(argv[1], "mining") == 0)
 	{
@@ -146,13 +161,13 @@ int main(int argc, char **argv)
 		actuatorPos(ampSerial,1.4) ;
 		sleep(1);
 		actuatorPos(ampSerial,.8) ;
+
 		*/
-	
-		
+
 		
 
 		//MiningTime1(ampSerial, buckets, screwdriver);
-		
+		return 1;
 	}
 	else if (argc > 1 and  strcmp(argv[1], "limitSwitchTest") == 0)
 	{
@@ -163,13 +178,9 @@ int main(int argc, char **argv)
 	{
 		//deposition
 		deposition(ampSerial, Motor_hopper_belt);
-		return 1;
 	}
-	else if (argc > 1 and strcmp (argv[1], "fiducial") == 0)
-	{
-		fiducial(argc, argv);
-		return 1;	
-	}
+	fiducial(argc, argv);
+	return 1;
   
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
