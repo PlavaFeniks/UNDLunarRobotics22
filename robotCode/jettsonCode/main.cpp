@@ -31,6 +31,7 @@
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
 #define XJETSONRELATIVETOROBOT -3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
 #define YJETSONRELATIVETOROBOT 3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
+float PI = 3.14159265;
 
 float fiducialPositionX = 0;
 float fiducialPositionY = 0;
@@ -84,9 +85,9 @@ void miningSetup()
     PID_valsScrew[PID_I] = .000;
     PID_valsScrew[PID_D] = .5;
     PID_valsScrew[PID_F] = .04;
-	buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
+	//buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
 	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
-	screwdriver = new TalonPair(5);
+	//screwdriver = new TalonPair(5);
 	cout<<"miningSetup Complete "<<endl;
 }
 
@@ -112,16 +113,29 @@ int main(int argc, char **argv)
 		
 		miningSetup();
 		cout <<"begining "<<endl;
-		//actuatorCalibration(ampSerial) ;
-actuatorPos(ampSerial,0.00) ;
+		LimitSwitchTest();
 		
+		//preMining(ampSerial,buckets,screwdriver);
+		/*
+		actuatorCalibration(ampSerial) ;
+		sleep(2);
+		actuatorCalibration(ampSerial) ;
+		//actuatorPos(ampSerial,0.00) ;
+		*/
 		
+		/*
 		cout<< "Set to zero"<< endl;
+		actuatorPos(ampSerial,0);
 		sleep(2);
-		actuatorPos(ampSerial,1.97);
+		actuatorPos(ampSerial,1.00f);
 		sleep(2);
-		actuatorPos(ampSerial,1.50);
-				cout<< "Set to 1.5"<< endl;
+		actuatorPos(ampSerial,0.50f);
+		sleep(1);
+		cout<< "Set to 0.5"<< endl;
+		*/
+		//actuatorPos(ampSerial,0.50f);
+		
+				
 		
 		
 		
@@ -133,7 +147,7 @@ actuatorPos(ampSerial,0.00) ;
 		sleep(1);
 		actuatorPos(ampSerial,.8) ;
 		*/
-		//LimitSwitchTest();
+	
 		
 		
 

@@ -44,7 +44,6 @@ the use of this software, even if advised of the possibility of such damage.
 #include "aruco_samples_utility.hpp"
 
 
-
 using namespace std;
 using namespace cv;
 
@@ -72,12 +71,28 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv);
 
 void fiducial(int argc, char **argv)
 {
-    vector< Vec3d > marker2cameraRVec, marker2cameraTVec;
-    bool poseFound = false;
-    Mat marker2cameraRMat = (Mat1d(3, 3) << 1, 0, 0, 	0, 1, 0, 	0, 0, 0);
-	tie(marker2cameraRVec, marker2cameraTVec, poseFound) = getFiducialPose(argc, argv);
+    vector< Vec3d > marker2cameraRVec, marker2cameraTVec; //vectors obtained from fiducial pose
+    bool poseFound = false; //if pose is found or not
+    Mat marker2cameraRMat = (Mat1d(3, 3) << 1, 0, 0, 	0, 1, 0, 	0, 0, 0); //rotation matrix
+    
+    tie(marker2cameraRVec, marker2cameraTVec, poseFound) = getFiducialPose(argc, argv);
+	
     Rodrigues(marker2cameraRVec, marker2cameraRMat);
-    cout << marker2cameraRVec[0] << " " << marker2cameraTVec[0] << " " << marker2cameraRMat << endl;
+    Mat marker2camera = (Mat1d(4,4) << 
+		marker2cameraRMat.at<double>(0, 0), marker2cameraRMat.at<double>(0, 1), marker2cameraRMat.at<double>(0, 2), marker2cameraTVec[0][0],
+		marker2cameraRMat.at<double>(1, 0), marker2cameraRMat.at<double>(1, 1), marker2cameraRMat.at<double>(1, 2), marker2cameraTVec[0][1],
+		marker2cameraRMat.at<double>(2, 0), marker2cameraRMat.at<double>(2, 1), marker2cameraRMat.at<double>(2, 2), marker2cameraTVec[0][2],
+		0, 0, 0, 1);
+    cout << marker2cameraRVec[0] << " " << marker2cameraTVec[0] << " \n" << marker2cameraRMat << endl;
+    cout << marker2camera << "\n";
+    Mat camera2marker = marker2camera.inv();
+    cout << camera2marker << endl;
+    
+    float x = camera2marker.at<float>(0, 3);
+    float z = camera2marker.at<float>(2, 3);
+    
+    float theta = -asin(marker2cameraRMat.at<double>(1,0)) * 180 / 3.14159265;
+    cout << theta << endl;
 }
 
 tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
@@ -188,7 +203,7 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
 			return make_tuple(rvecs, tvecs, true);
 			//break;
         }
-        imshow("out", imageCopy);
+        //imshow("out", imageCopy);
         
     if (cv::waitKey(10) >= 0) break;
 	}
