@@ -1,5 +1,4 @@
 //https://github.com/stereolabs/zed-examples/blob/master/positional%20tracking/cpp/src/main.cpp
-float PI = 3.14159265;
 int ERRORRATEDISTANCE = 2;
 int ERRORRATEANGLE = 1;
 

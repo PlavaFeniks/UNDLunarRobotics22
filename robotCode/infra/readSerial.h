@@ -67,7 +67,7 @@ string readSerial::getSerial(){
     } 
     if (read_buf == ';') {
     outPutString += read_buf;
-//    cout<<"semicolon Found"<<endl<<flush;
+		//cout<<"semicolon Found n = "<< n <<endl<<flush;
     }
     return(outPutString);
     
