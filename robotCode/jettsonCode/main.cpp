@@ -87,7 +87,6 @@ void miningSetup()
 	buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
 	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
 	screwdriver = new TalonPair(5);
-	cout<<"miningSetup Complete "<<endl;
 }
 
 void makeRowIntraversable()
@@ -98,47 +97,46 @@ void makeRowIntraversable()
 	}
 }
 
+void fiducialTest()
+{
+	//fiducial();
+}
 
 int main(int argc, char **argv)
 {
-	// Set configuration parameters
 	
+	// Set configuration parameters
+	std::string interface;
+	interface = "can0";
+	int temp; 
+	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
+		perror("");
+		std::_Exit(0);
+	}
+
+
 	//initialization for mining and deposition
-	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");//= new readSerial((char*)"/dev/ttyUSB0");
-	TalonPair * Motor_hopper_belt ;//= new TalonPair(7);
+	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");
+	TalonPair * Motor_hopper_belt = new TalonPair(7);
+	
 	
 	if (argc > 1 and  strcmp(argv[1], "mining") == 0)
 	{
 		
 		miningSetup();
-		cout <<"begining "<<endl;
-		//actuatorCalibration(ampSerial) ;
-actuatorPos(ampSerial,0.00) ;
-		
-		
-		cout<< "Set to zero"<< endl;
-		sleep(2);
-		actuatorPos(ampSerial,1.97);
-		sleep(2);
-		actuatorPos(ampSerial,1.50);
-				cout<< "Set to 1.5"<< endl;
-		
-		
-		
-		return 1;
-		/*sleep(1);
-		//actuatorPos(ampSerial,1) ;
+		actuatorPos(ampSerial,1.97) ;
+		sleep(1);
+		actuatorPos(ampSerial,0);
+		sleep(1);
+		actuatorPos(ampSerial,1) ;
 		sleep(1);
 		actuatorPos(ampSerial,1.4) ;
 		sleep(1);
 		actuatorPos(ampSerial,.8) ;
-		*/
-		//LimitSwitchTest();
-		
 		
 
 		//MiningTime1(ampSerial, buckets, screwdriver);
-		
+		return 1;
 	}
 	else if (argc > 1 and  strcmp(argv[1], "limitSwitchTest") == 0)
 	{
@@ -149,13 +147,9 @@ actuatorPos(ampSerial,0.00) ;
 	{
 		//deposition
 		deposition(ampSerial, Motor_hopper_belt);
-		return 1;
 	}
-	else if (argc > 1 and strcmp (argv[1], "fiducial") == 0)
-	{
-		fiducial(argc, argv);
-		return 1;	
-	}
+	fiducial(argc, argv);
+	return 1;
   
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode

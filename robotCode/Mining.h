@@ -1,8 +1,3 @@
-//If the CANAble doesn't switch to active (blue -> green) run `./run.sh` 
-//from the ~/Documents/gitrepos/UNDLunarRobotics
-
-// what to run
-// ~/Documents/gitrepos/UNDLunarRobotics22/robotCode$ ./bin/autonomous mining
 
 #include <iostream>
 // for delay function.
@@ -42,7 +37,7 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
     float rightPos = arr[6]; 	//
     float leftPos = arr[7];	//
 
-    float speedPercent = .8;
+    float speedPercent = .9;
 
     cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
 
@@ -53,23 +48,22 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
         if ( rightPos>setPOS){
 			while(true)
 			{
-				//cout << "first\n";
+				cout << "first\n";
 
 				arr = ampSerial->getSerialVals(10);
 				rightPos = arr[6]; 	//
 				leftPos = arr[7];
 				actuatorR->SETSPEED(speedPercent); // set speed for the two motors
 				actuatorL->SETSPEED(speedPercent); // set speed for the two motors
-				//cout<<"END Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
-
-				if(rightPos<(setPOS+.1f) or leftPos<(setPOS+.1f)  ){
+				
+				if(rightPos<(setPOS+.01) and leftPos<(setPOS+.01)  ){
 					actuatorR->SETSPEED(0); // set speed for the two motors
 					actuatorL->SETSPEED(0);
 					arr = ampSerial->getSerialVals(10);
 					rightPos = arr[6]; 	//
 					leftPos = arr[7];
 					
-					//cout<<"END Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
+					cout<<"END Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
 					return;
 
 				}
@@ -78,90 +72,28 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
         else if ( rightPos<setPOS){
 			while(true)
 				{
-				//cout << "second\n";
+				cout << "second\n";
 
 				arr = ampSerial->getSerialVals(10);
 				rightPos = arr[6]; 	//
 				leftPos = arr[7];
 				actuatorR->SETSPEED(-speedPercent); // set speed for the two motors
 				actuatorL->SETSPEED(-speedPercent); // set speed for the two motors
-				//cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
-				if(rightPos>(setPOS-.1f) or leftPos>(setPOS-.1f)){
+				cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
+				if(rightPos>(setPOS-.01)and leftPos>(setPOS-.01)){
 					actuatorR->SETSPEED(0); // set speed for the two motors
 					actuatorL->SETSPEED(0);
 					arr = ampSerial->getSerialVals(10);
 					rightPos = arr[6]; 	//
 					leftPos = arr[7];
 					
-					//cout<<"END Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
+					cout<<"END Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
 					return;
 				}
 			}			
         }
     }
 }
-void actuatorCalibration(readSerial* ampSerial){
-
-
-	TalonPair * actuatorR;
-	TalonPair * actuatorL;
-
-	actuatorR = new TalonPair(8);
-    actuatorL = new TalonPair(9);
-
-    float *arr;
-    arr = new float(10);            
-    arr = ampSerial->getSerialVals(10);
-	arr = ampSerial->getSerialVals(10);
-    float rightPos = arr[6]; 	//
-    float leftPos = arr[7];	//
-
-    float speedPercent = .8;
-
-    cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
-    
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    
-
-		while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 10)
-		{
-			arr = ampSerial->getSerialVals(10);
-
-			end = std::chrono::steady_clock::now();
-			arr = ampSerial->getSerialVals(10);
-			rightPos = arr[6]; 	//
-			leftPos = arr[7];
-			actuatorR->SETSPEED(speedPercent); // set speed for the two motors
-			actuatorL->SETSPEED(speedPercent); // set speed for the two motors
-
-		}
-	cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
-	cout<<"press enter"<<endl;
-    cin.get();
-    std::chrono::steady_clock::time_point begin2 = std::chrono::steady_clock::now();
-	std::chrono::steady_clock::time_point end2 = std::chrono::steady_clock::now();
-	
-	
-	
-		while(std::chrono::duration_cast<std::chrono::seconds>(end2-begin2).count() < 10)
-		{
-			arr = ampSerial->getSerialVals(10);
-
-			end2 = std::chrono::steady_clock::now();
-			arr = ampSerial->getSerialVals(10);
-			rightPos = arr[6]; 	//
-			leftPos = arr[7];
-			actuatorR->SETSPEED(-speedPercent); // set speed for the two motors
-			actuatorL->SETSPEED(-speedPercent); // set speed for the two motors
-
-		}
-		
-	cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
-
-	
-}
-
 void LimitSwitchTest(){
 
 
@@ -171,24 +103,19 @@ void LimitSwitchTest(){
 
     GPIO::setup(LSwitch, GPIO::IN);
 	GPIO::setup(HSwitch, GPIO::IN);
-	GPIO::setup(hallEffect, GPIO::IN);
-    
-
 
 
 	int switchL;
 	int switchH;
-	int hallBoi;
+
     
     
 	while(true)
 	{
 	
-		
 		switchL = GPIO::input(LSwitch);
 		switchH = GPIO::input(HSwitch);
-		hallBoi = GPIO::input(hallEffect);
-/*
+
 		if (switchL == 0)
 		{
 
@@ -201,15 +128,8 @@ void LimitSwitchTest(){
 			std::_Exit(1);
 			//return;
 		}
-		*/
-		 if (hallBoi == 0 )
-		{
-				cout<<"Halleffect"<<endl;
-			
-		}
 		else {
 			cout<<"neither Pressed" << endl;
-				
 		}
 	}
 }
