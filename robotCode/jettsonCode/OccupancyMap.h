@@ -108,7 +108,7 @@ void occupancyMap(int scale=10, double threshVal=100)
 
 //gets ground plane and point cloud
 //affects global variables
-void getCloudAndPlane(int scale)
+void getCloudAndPlane(int scale, float confidenceZedThreshhold = 50, double threshVal=100)
 {
 	// Set runtime parameters after opening the camera
     RuntimeParameters runtime_parameters;
@@ -160,7 +160,7 @@ void getCloudAndPlane(int scale)
 			{	
 				float confidenceZED = 0;
 				confidence_map.getValue(i, j, &confidenceZED);
-				if (confidenceZED >50) continue; //1-100+
+				if (confidenceZED >confidenceZedThreshhold) continue; //1-100+
 				
 				
 				sl::float4 point_cloud_value;

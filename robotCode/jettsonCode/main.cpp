@@ -87,7 +87,6 @@ void miningSetup()
     PID_valsScrew[PID_F] = .04;
 	//buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
 	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
-
 	//screwdriver = new TalonPair(5);
 	cout<<"miningSetup Complete "<<endl;
 }
@@ -107,28 +106,17 @@ void fiducialTest()
 
 int main(int argc, char **argv)
 {
-	
-	// Set configuration parameters
-	std::string interface;
-	interface = "can0";
-	int temp; 
-	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
-		perror("");
-		std::_Exit(0);
-	}
-
-
 	//initialization for mining and deposition
 	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");
 	TalonPair * Motor_hopper_belt = new TalonPair(7);
-	
 	
 	if (argc > 1 and  strcmp(argv[1], "mining") == 0)
 	{
 		
 		miningSetup();
 		cout <<"begining "<<endl;
-		LimitSwitchTest();
+		actuatorPos(ampSerial,0.00) ;
+		//LimitSwitchTest();
 		
 		//preMining(ampSerial,buckets,screwdriver);
 		/*
@@ -179,8 +167,11 @@ int main(int argc, char **argv)
 		//deposition
 		deposition(ampSerial, Motor_hopper_belt);
 	}
-	fiducial(argc, argv);
-	return 1;
+	else if (argc > 1 and strcmp(argv[1], "fiducial") == 0)
+	{
+		fiducial(argc, argv);
+		return 1;
+	}
   
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -202,9 +193,23 @@ int main(int argc, char **argv)
 	initializePositionalTracking();
 	
 	int scale = 10; //bigger is more zoomed out, cm/scale
+	
 	int threshVal = 100;
+	float confidenceZedThreshhold = 50;
+	OccThresh = .5;
+	if (argc > 4 and strcmp(argv[1], "Vision") == 0) //order of args is Vision threshVal OccThresh confidenceZedThreshhold
+	{
+		cout << "setting threshhold values\n";
+		threshVal = atoi(argv[2]);
+		confidenceZedThreshhold = atof(argv[3]);
+		OccThresh = atof(argv[4]);
+	}
+	
+	
+	
+	
 	//generate map
-	getCloudAndPlane(scale);
+	getCloudAndPlane(scale, confidenceZedThreshhold, threshVal);
 	startNode = mapOfPit[(int)zedPositionY][(int)zedPositionX];
 	endNode = mapOfPit[15][(int)zedPositionX];
 	cmdLineOccupancyMap();
@@ -217,7 +222,7 @@ int main(int argc, char **argv)
 	//generate with thickening
 	cmdLineOccupancyMap();
 	
-	if (argc > 1 and  strcmp(argv[1], "testMap"))
+	if (argc > 1 and  strcmp(argv[1], "Vision") == 0)
 	{
 		// Close the camera
 		zed.close();

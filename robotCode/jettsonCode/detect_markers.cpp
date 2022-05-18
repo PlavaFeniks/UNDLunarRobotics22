@@ -66,6 +66,7 @@ const char* keys  =
         "{refine   |       | Corner refinement: CORNER_REFINE_NONE=0, CORNER_REFINE_SUBPIX=1,"
         "CORNER_REFINE_CONTOUR=2, CORNER_REFINE_APRILTAG=3}";
 }
+tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int, char **);
 
 void fiducial(int argc, char **argv)
 {
@@ -81,17 +82,48 @@ void fiducial(int argc, char **argv)
 		marker2cameraRMat.at<double>(1, 0), marker2cameraRMat.at<double>(1, 1), marker2cameraRMat.at<double>(1, 2), marker2cameraTVec[0][1],
 		marker2cameraRMat.at<double>(2, 0), marker2cameraRMat.at<double>(2, 1), marker2cameraRMat.at<double>(2, 2), marker2cameraTVec[0][2],
 		0, 0, 0, 1);
-    cout << marker2cameraRVec[0] << " " << marker2cameraTVec[0] << " \n" << marker2cameraRMat << endl;
-    cout << marker2camera << "\n";
+    cout << "Rvec " << marker2cameraRVec[0] << "\n tvec " << marker2cameraTVec[0] << " \n marker2cameraRMat " << marker2cameraRMat << endl;
+    cout << "\nmarker2camera\n" <<  marker2camera << "\n";
     Mat camera2marker = marker2camera.inv();
-    cout << camera2marker << endl;
+    cout << "\ncamera2marker\n" << camera2marker << endl;
     
+    cout << "\nimportant stuff below\n";
+    
+    Mat translationMatrix = (Mat1d(1,3)<< marker2cameraTVec[0][0], marker2cameraTVec[0][1], marker2cameraTVec[0][2]);
+    Mat transpose = marker2cameraRMat.t();
+    Mat temp = (-transpose * translationMatrix.t());
+    cout << temp << endl;
+    
+    cout << "roll " << atan2(-transpose.at<double>(2,1), transpose.at<double>(2,2)) * 180 / 3.14159265 << endl;
+    cout << "pitch " << asin(transpose.at<double>(2,0)) * 180 / 3.14159265 << endl;
+    cout << "yaw " << atan2(-transpose.at<double>(1,0), transpose.at<double>(0,0)) * 180 / 3.14159265 << endl;
+    
+    
+    
+    cout << "\nalternative method\n";
     float x = camera2marker.at<float>(0, 3);
     float z = camera2marker.at<float>(2, 3);
     
-    float theta = -asin(marker2cameraRMat.at<double>(1,0)) * 180 / 3.14159265;
-    cout << theta << endl;
+    Mat yRot;
+    cout << "decomp: \n" << RQDecomp3x3(marker2cameraRMat, Mat1d(3, 3), Mat1d(3, 3), noArray(), yRot) << endl;
+    
+    cout <<  "ymatrix: \n" << yRot << endl;
+    
+    float theta = asin(-yRot.at<double>(2,0)) * 180 / 3.14159265;
+    cout << "angle: " << theta << endl;
+    
+    cout << "\nalternative method\n";
+    x = camera2marker.at<float>(0, 3);
+    z = camera2marker.at<float>(2, 3);
+    
+    cout << "decomp: \n" << RQDecomp3x3(marker2cameraRMat.inv(), Mat1d(3, 3), Mat1d(3, 3), noArray(), yRot) << endl;
+    
+    cout <<  "ymatrix: \n" << yRot << endl;
+    
+    theta = -asin(-yRot.at<double>(2,0)) * 180 / 3.14159265;
+    cout << "angle: " << theta << endl;
 }
+
 
 tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
 {
@@ -122,7 +154,7 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
         bool readOk = dictionary->aruco::Dictionary::readDictionary(fs.root());
         if(!readOk) {
             cerr << "Invalid detector parameters file" << endl;
-            return;
+            return make_tuple(rvecs, tvecs, false);
         }
     }
 
@@ -141,7 +173,7 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
 
     if(!parser.check()) {
         parser.printErrors();
-        return;
+        return make_tuple(rvecs, tvecs, false);
     }
 
     
@@ -150,12 +182,12 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
         bool readOk = dictionary->aruco::Dictionary::readDictionary(fs.root());
         if(!readOk) {
             std::cerr << "Invalid dictionary file" << std::endl;
-            return;
+			return make_tuple(rvecs, tvecs, false);
         }
     }
     
     
-cv::VideoCapture inputVideo("/dev/video2");
+cv::VideoCapture inputVideo("/dev/video0");
 
     int waitTime;
     
@@ -196,9 +228,11 @@ cv::VideoCapture inputVideo("/dev/video2");
             aruco::drawDetectedMarkers(imageCopy, corners, ids);
             for(unsigned int i = 0; i < ids.size(); i++)
 				cv::drawFrameAxes(imageCopy, camMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 1.5f, 2);
+			return make_tuple(rvecs, tvecs, true);
         }
-        //imshow("out", imageCopy);
+        imshow("out", imageCopy);
         
     if (cv::waitKey(10) >= 0) break;
 	}
+	return make_tuple(rvecs, tvecs, false);
 }
