@@ -194,9 +194,9 @@ int main(int argc, char **argv)
 	
 	int scale = 10; //bigger is more zoomed out, cm/scale
 	
-	int threshVal = 100;
-	float confidenceZedThreshhold = 50;
-	OccThresh = .5;
+	int threshVal = 40;
+	float confidenceZedThreshhold = 75;
+	OccThresh = -.3;
 	if (argc > 4 and strcmp(argv[1], "Vision") == 0) //order of args is Vision threshVal OccThresh confidenceZedThreshhold
 	{
 		cout << "setting threshhold values\n";

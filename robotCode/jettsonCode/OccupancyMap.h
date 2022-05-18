@@ -57,7 +57,7 @@ void occupancyMap(int scale=10, double threshVal=100)
 					mapOfPit[yhere][xhere]->Nobs ++;
 					mapOfPit[yhere][xhere]->Zval = mapOfPit[yhere][xhere]->Zsum/float(mapOfPit[yhere][xhere]->Nobs);
 					
-					float dist = abs(gplaneA*(*Xval[i][j])*scale+gplaneB*(*Yval[i][j])*scale+gplaneC*(*Zval[i][j])*scale+gplaneD)/(sqrt(pow(gplaneA,2)+pow(gplaneB,2)+pow(gplaneC,2)));
+					float dist = abs(gplaneA*(*Xval[i][j])+gplaneB*(*Yval[i][j])+gplaneC*(*Zval[i][j])+gplaneD)/(sqrt(pow(gplaneA,2)+pow(gplaneB,2)+pow(gplaneC,2)));
 					mapOfPit[yhere][xhere]->Disthere = dist;
 					if (abs(dist) >= threshVal)
 					{
@@ -144,10 +144,10 @@ void getCloudAndPlane(int scale, float confidenceZedThreshhold = 50, double thre
 			// Reset positional tracking to align it with the floor plane frame
 			//zed.resetPositionalTracking(resetTrackingFloorFrame);
 			sl::float4 theThing = plane.getPlaneEquation();
-			gplaneA = theThing.x;
-			gplaneB = theThing.y;
-			gplaneC = theThing.z;
-			gplaneD = theThing.w;
+			gplaneA = theThing.x/10;
+			gplaneB = theThing.y/10;
+			gplaneC = theThing.z/10;
+			gplaneD = theThing.w/10;
 		}
 		else
 		{
@@ -177,7 +177,7 @@ void getCloudAndPlane(int scale, float confidenceZedThreshhold = 50, double thre
 				}
 			}
 		}
-		occupancyMap(scale);
+		occupancyMap(scale, threshVal);
 		k += 1;       
 	}
 	cout << "point cloud defined\n";
