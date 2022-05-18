@@ -43,6 +43,8 @@ the use of this software, even if advised of the possibility of such damage.
 #include <iostream>
 #include "aruco_samples_utility.hpp"
 
+
+
 using namespace std;
 using namespace cv;
 
@@ -66,9 +68,22 @@ const char* keys  =
         "{refine   |       | Corner refinement: CORNER_REFINE_NONE=0, CORNER_REFINE_SUBPIX=1,"
         "CORNER_REFINE_CONTOUR=2, CORNER_REFINE_APRILTAG=3}";
 }
+tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv);
 
 void fiducial(int argc, char **argv)
 {
+    vector< Vec3d > marker2cameraRVec, marker2cameraTVec;
+    bool poseFound = false;
+    Mat marker2cameraRMat = (Mat1d(3, 3) << 1, 0, 0, 	0, 1, 0, 	0, 0, 0);
+	tie(marker2cameraRVec, marker2cameraTVec, poseFound) = getFiducialPose(argc, argv);
+    Rodrigues(marker2cameraRVec, marker2cameraRMat);
+    cout << marker2cameraRVec[0] << " " << marker2cameraTVec[0] << " " << marker2cameraRMat << endl;
+}
+
+tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
+{
+    vector< Vec3d > rvecs, tvecs;
+        
     CommandLineParser parser(argc, argv, keys);
     parser.about(about);
 	Mat camMatrix = (Mat1d(3, 3) << 1364.1, 0, 0, 0, 1360.8, 0, 1004.9, 511.6639, 1);
@@ -94,7 +109,7 @@ void fiducial(int argc, char **argv)
         bool readOk = dictionary->aruco::Dictionary::readDictionary(fs.root());
         if(!readOk) {
             cerr << "Invalid detector parameters file" << endl;
-            return;
+            return make_tuple(rvecs, tvecs, false);
         }
     }
 
@@ -113,7 +128,7 @@ void fiducial(int argc, char **argv)
 
     if(!parser.check()) {
         parser.printErrors();
-        return;
+        return make_tuple(rvecs, tvecs, false);
     }
 
     
@@ -122,12 +137,12 @@ void fiducial(int argc, char **argv)
         bool readOk = dictionary->aruco::Dictionary::readDictionary(fs.root());
         if(!readOk) {
             std::cerr << "Invalid dictionary file" << std::endl;
-            return;
+            return make_tuple(rvecs, tvecs, false);
         }
     }
     
     
-cv::VideoCapture inputVideo("/dev/video2");
+	cv::VideoCapture inputVideo("/dev/video0");
 
     int waitTime;
     
@@ -154,12 +169,11 @@ cv::VideoCapture inputVideo("/dev/video2");
         vector< int > ids;
         vector< vector< Point2f > > corners, rejected;
         
-        vector< Vec3d > rvecs, tvecs;
         // detect markers and estimate pose
         aruco::detectMarkers(image, dictionary, corners, ids, detectorParams, rejected);
         
         
-       // if(estimatePose && ids.size() > 0)
+       if(ids.size() > 0)
             aruco::estimatePoseSingleMarkers(corners, markerLength, camMatrix, distCoeffs, rvecs, tvecs);
             
         // draw results
@@ -167,11 +181,13 @@ cv::VideoCapture inputVideo("/dev/video2");
         if(ids.size() > 0) {
             aruco::drawDetectedMarkers(imageCopy, corners, ids);
             for(unsigned int i = 0; i < ids.size(); i++)
-				cv::drawFrameAxes(imageCopy, camMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 1.5f, 2);
+            {
+				cv::drawFrameAxes(imageCopy, camMatrix, distCoeffs, rvecs[i], tvecs[i], 1, 2);
+			}
+			cout << endl;
+			return make_tuple(rvecs, tvecs, true);
+			//break;
         }
-        if(showRejected && rejected.size() > 0)
-            aruco::drawDetectedMarkers(imageCopy, rejected, noArray(), Scalar(100, 0, 255));
-
         imshow("out", imageCopy);
         
     if (cv::waitKey(10) >= 0) break;

@@ -66,6 +66,6 @@ const char* keys  =
         "{refine   |       | Corner refinement: CORNER_REFINE_NONE=0, CORNER_REFINE_SUBPIX=1,"
         "CORNER_REFINE_CONTOUR=2, CORNER_REFINE_APRILTAG=3}";
 }
-
 void fiducial(int argc, char **argv);
+tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv);
 
