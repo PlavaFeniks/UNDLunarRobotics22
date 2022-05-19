@@ -29,8 +29,8 @@
 #define IMAGEWIDTH 1280 //x size of image
 #define IMAGEHEIGHT 720 //y size of image
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
-#define XJETSONRELATIVETOROBOT -3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
-#define YJETSONRELATIVETOROBOT 3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
+#define XJETSONRELATIVETOROBOT -1.778 //where the jetson is relative to the robot pov CENTIMETERS/10
+#define YJETSONRELATIVETOROBOT 6.096 //where the jetson is relative to the robot pov CENTIMETERS/10
 float PI = 3.14159265;
 
 float fiducialPositionX = 0;
@@ -99,9 +99,30 @@ void makeRowIntraversable()
 	}
 }
 
-void fiducialTest()
+void testMovement(float speed)
 {
-	//fiducial();
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point   end = std::chrono::steady_clock::now();
+	
+	while (std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5)
+	{
+		end = std::chrono::steady_clock::now();
+		locomotion.SETSPEED(-speed, speed);
+	}
+	locomotion.SETSPEED(0,0);
+	begin = std::chrono::steady_clock::now();
+	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5)
+	{
+		end = std::chrono::steady_clock::now();
+		locomotion.SETSPEED(speed, speed);
+	}
+	locomotion.SETSPEED(0,0);
+	begin = std::chrono::steady_clock::now();
+	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5)
+	{
+		end = std::chrono::steady_clock::now();
+		locomotion.SETSPEED(-speed, -speed);
+	}
 }
 
 int main(int argc, char **argv)
@@ -172,6 +193,11 @@ int main(int argc, char **argv)
 		fiducial(argc, argv);
 		return 1;
 	}
+	else if (argc > 1 and strcmp(argv[1], "movement") == 0)
+	{
+		testMovement(400);
+		return 1;	
+	}
   
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -211,10 +237,10 @@ int main(int argc, char **argv)
 	//generate map
 	getCloudAndPlane(scale, confidenceZedThreshhold, threshVal);
 	startNode = mapOfPit[(int)zedPositionY][(int)zedPositionX];
-	endNode = mapOfPit[15][(int)zedPositionX];
+	endNode = mapOfPit[8][(int)zedPositionX+2];
 	cmdLineOccupancyMap();
 	cmdLineNobs();
-	thiccOccupancymap(3);
+	//thiccOccupancymap(3);
 
 	FindPath(startNode);
 	

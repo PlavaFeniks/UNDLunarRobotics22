@@ -102,7 +102,7 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 	
 	//find initial angle
 	getTranslationImage(current, isMovingForwards);
-	determineAngleToGoal(*current, goalState);
+	determineAngleToGoal(*current, goalState, isMovingForwards);
 	float angleDiff = getAngleDifference(*current, *goalState);
 	cout << "-----\n";
 	cout << "Goal X: " << goalState->tx << " Y: " << goalState->ty << "\nCurrent X:" << current->tx << " Y: " << current->ty << "\n\n";
@@ -114,7 +114,7 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 	{
 		end = std::chrono::steady_clock::now();
 		getTranslationImage(current, isMovingForwards);
-		angleDiff = getAngleDifference(*current, *goalState);
+		angleDiff = -getAngleDifference(*current, *goalState);
 		
 		if (std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() > 5) //stuck in hole, took 5 seconds to turn
 		{
@@ -127,8 +127,8 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0) locomotion.SETSPEED(-speed, speed); //turn left
-		else if (angleDiff < 0) locomotion.SETSPEED(speed, -speed); //turn right
+		else if (angleDiff > 0) locomotion.SETSPEED(-speed, -speed); //turn left
+		else if (angleDiff < 0) locomotion.SETSPEED(speed, speed); //turn right
 		
 	}
 	
@@ -162,7 +162,7 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 			locomotion.SETSPEED(0,0);
 			break;
 		}
-		else isMovingForwards ? locomotion.SETSPEED(speed, speed) : locomotion.SETSPEED(-speed, -speed);
+		else isMovingForwards ? locomotion.SETSPEED(-speed, speed) : locomotion.SETSPEED(speed, -speed);
 	}
 	return true;
 }
