@@ -127,6 +127,7 @@ void testMovement(float speed)
 
 int main(int argc, char **argv)
 {
+	cout << "welcome to my lets play\n";
 	//initialization for mining and deposition
 	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");
 	TalonPair * Motor_hopper_belt = new TalonPair(7);

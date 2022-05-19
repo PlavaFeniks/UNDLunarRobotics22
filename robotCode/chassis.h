@@ -66,7 +66,7 @@ void chassis::SETSPEED(double _lSpeed, double _rspeed){
     __frght->SETSPEED(_rspeed);
     __bleft->SETSPEED(_lSpeed);
     __brght->SETSPEED(_rspeed);
-    cout<< "Chassis Speed Left: " <<_lSpeed << " Right: " <<_rspeed<<endl;
+    //cout<< "Chassis Speed Left: " <<_lSpeed << " Right: " <<_rspeed<<endl;
 }
 
 //Use int for issues regarding likely precision
