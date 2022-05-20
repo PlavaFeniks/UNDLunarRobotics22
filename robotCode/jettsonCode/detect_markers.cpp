@@ -68,13 +68,17 @@ const char* keys  =
 }
 tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int, char **);
 
-void fiducial(int argc, char **argv)
+tuple<float, float, float, bool> fiducialNums(int argc, char **argv)
 {
     vector< Vec3d > marker2cameraRVec, marker2cameraTVec; //vectors obtained from fiducial pose
     bool poseFound = false; //if pose is found or not
     Mat marker2cameraRMat = (Mat1d(3, 3) << 1, 0, 0, 	0, 1, 0, 	0, 0, 0); //rotation matrix
     
     tie(marker2cameraRVec, marker2cameraTVec, poseFound) = getFiducialPose(argc, argv);
+	if (poseFound == false)
+	{
+		return make_tuple(0, 0, 0, false);
+	}
 	
     Rodrigues(marker2cameraRVec, marker2cameraRMat);
     Mat marker2camera = (Mat1d(4,4) << 
@@ -82,46 +86,49 @@ void fiducial(int argc, char **argv)
 		marker2cameraRMat.at<double>(1, 0), marker2cameraRMat.at<double>(1, 1), marker2cameraRMat.at<double>(1, 2), marker2cameraTVec[0][1],
 		marker2cameraRMat.at<double>(2, 0), marker2cameraRMat.at<double>(2, 1), marker2cameraRMat.at<double>(2, 2), marker2cameraTVec[0][2],
 		0, 0, 0, 1);
-    cout << "Rvec " << marker2cameraRVec[0] << "\n tvec " << marker2cameraTVec[0] << " \n marker2cameraRMat " << marker2cameraRMat << endl;
-    cout << "\nmarker2camera\n" <<  marker2camera << "\n";
+    //cout << "Rvec " << marker2cameraRVec[0] << "\n tvec " << marker2cameraTVec[0] << " \n marker2cameraRMat " << marker2cameraRMat << endl;
+    //cout << "\nmarker2camera\n" <<  marker2camera << "\n";
     Mat camera2marker = marker2camera.inv();
-    cout << "\ncamera2marker\n" << camera2marker << endl;
+    //cout << "\ncamera2marker\n" << camera2marker << endl;
     
-    cout << "\nimportant stuff below\n";
+    //cout << "\nimportant stuff below\n";
     
     Mat translationMatrix = (Mat1d(1,3)<< marker2cameraTVec[0][0], marker2cameraTVec[0][1], marker2cameraTVec[0][2]);
     Mat transpose = marker2cameraRMat.t();
     Mat temp = (-transpose * translationMatrix.t());
-    cout << temp << endl;
+    //cout << "temp: " << temp << endl;
     
-    cout << "roll " << atan2(-transpose.at<double>(2,1), transpose.at<double>(2,2)) * 180 / 3.14159265 << endl;
-    cout << "pitch " << asin(transpose.at<double>(2,0)) * 180 / 3.14159265 << endl;
-    cout << "yaw " << atan2(-transpose.at<double>(1,0), transpose.at<double>(0,0)) * 180 / 3.14159265 << endl;
+    //cout << "roll " << atan2(-transpose.at<double>(2,1), transpose.at<double>(2,2)) * 180 / 3.14159265 << endl;
+    //cout << "pitch " << asin(transpose.at<double>(2,0)) * 180 / 3.14159265 << endl;
+    //cout << "yaw " << atan2(-transpose.at<double>(1,0), transpose.at<double>(0,0)) * 180 / 3.14159265 << endl;
     
     
     
-    cout << "\nalternative method\n";
-    float x = camera2marker.at<float>(0, 3);
-    float z = camera2marker.at<float>(2, 3);
+    //cout << "\nalternative method\n";
+    float x = temp.at<double>(0, 0);
+    float z = temp.at<double>(2, 0);
     
     Mat yRot;
-    cout << "decomp: \n" << RQDecomp3x3(marker2cameraRMat, Mat1d(3, 3), Mat1d(3, 3), noArray(), yRot) << endl;
+    RQDecomp3x3(marker2cameraRMat, Mat1d(3, 3), Mat1d(3, 3), noArray(), yRot);
+    //cout << "decomp: \n" << RQDecomp3x3(marker2cameraRMat, Mat1d(3, 3), Mat1d(3, 3), noArray(), yRot) << endl;
     
-    cout <<  "ymatrix: \n" << yRot << endl;
+    //cout <<  "ymatrix: \n" << yRot << endl;
     
     float theta = asin(-yRot.at<double>(2,0)) * 180 / 3.14159265;
-    cout << "angle: " << theta << endl;
+    //cout << "angle: " << theta << endl;
     
     cout << "\nalternative method\n";
-    x = camera2marker.at<float>(0, 3);
-    z = camera2marker.at<float>(2, 3);
+    ////x = camera2marker.at<float>(0, 3);
+    //z = camera2marker.at<float>(2, 3);
     
-    cout << "decomp: \n" << RQDecomp3x3(marker2cameraRMat.inv(), Mat1d(3, 3), Mat1d(3, 3), noArray(), yRot) << endl;
-    
-    cout <<  "ymatrix: \n" << yRot << endl;
+    //cout << "decomp: \n" << RQDecomp3x3(marker2cameraRMat.inv(), Mat1d(3, 3), Mat1d(3, 3), noArray(), yRot) << endl;
+    RQDecomp3x3(marker2cameraRMat.inv(), Mat1d(3, 3), Mat1d(3, 3), noArray(), yRot);
+    //cout <<  "ymatrix: \n" << yRot << endl;
     
     theta = -asin(-yRot.at<double>(2,0)) * 180 / 3.14159265;
     cout << "angle: " << theta << endl;
+    cout << "x: " << x << " z: " << z << endl;
+    return make_tuple(x, z, theta, true);
 }
 
 
@@ -131,8 +138,8 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
 
     CommandLineParser parser(argc, argv, keys);
     parser.about(about);
-	Mat camMatrix = (Mat1d(3, 3) << 1364.1, 0, 0, 0, 1360.8, 0, 1004.9, 511.6639, 1);
-	Mat distCoeffs = (Mat1d(1, 4) << -0.0449, 0.0650, 0, 0);
+	Mat camMatrix = (Mat1d(3, 3) << 2496, 0, 0, 0, 2507, 0, 2544.4, 1728.3, 1);
+	Mat distCoeffs = (Mat1d(1, 4) << -.3079, 0.1141, 0, 0);
 /*    if(argc < 2) {					//print needed parameter
         parser.printMessage();
         return 0;
@@ -140,7 +147,7 @@ tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int argc, char **argv)
 */
     bool showRejected = parser.has("r");
     bool estimatePose = parser.has("c");
-    float markerLength = parser.get<float>("l");
+    float markerLength = .17145;//parser.get<float>("l");
 
     Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(20);
     if (parser.has("d")) {

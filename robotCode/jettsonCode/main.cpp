@@ -29,18 +29,21 @@
 #define IMAGEWIDTH 1280 //x size of image
 #define IMAGEHEIGHT 720 //y size of image
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
-float XJETSONRELATIVETOROBOT = -1.778; //where the jetson is relative to the robot pov CENTIMETERS/10
-float YJETSONRELATIVETOROBOT = 6.096; //where the jetson is relative to the robot pov CENTIMETERS/10
+float XZedRelativeToRobot = -1.778; //where the zed is relative to the robot pov CENTIMETERS/10
+float YZedRelativeToRobot = 6.096; //where the zed is relative to the robot pov CENTIMETERS/10
+float XFidCamRelativeToRobot = -2.0955; //where fiducial cam is relative to center of robot
+float YFidCamRelativeToRobot = -3.302;
+float fiducialPositionX = 45;
+float fiducialPositionY = 0;
+
 float PI = 3.14159265;
 
-float fiducialPositionX = 0;
-float fiducialPositionY = 0;
 
 float depositionX = 0;
 float depositionY = 0;
 
-float zedPositionX = 45; //position from fiducial
-float zedPositionY = 0;
+float robotPositionX = 45; //position from fiducial
+float robotPositionY = 0;
 
 using namespace std;
 using namespace sl;
@@ -66,6 +69,7 @@ TalonPair* screwdriver;
 #include "OccupancyMap.h" //contains all relevant occupancy map code
 #include "PathFollowing.h" //contains code for following a path
 #include "detect_markers.hpp"
+#include "fiducial.h"
 
 void miningSetup()
 {
@@ -191,7 +195,9 @@ int main(int argc, char **argv)
 	}
 	else if (argc > 1 and strcmp(argv[1], "fiducial") == 0)
 	{
-		fiducial(argc, argv);
+		if (fiducial(argc, argv) == false) cout << "help\n";
+		//frameTranslation(XFidCamRelativeToRobot, -YFidCamRelativeToRobot, 0);
+		cout << robotPositionX << " " << robotPositionY << endl;
 		return 1;
 	}
 	else if (argc > 1 and strcmp(argv[1], "movement") == 0)
@@ -237,8 +243,8 @@ int main(int argc, char **argv)
 	
 	//generate map
 	getCloudAndPlane(scale, confidenceZedThreshhold, threshVal);
-	startNode = mapOfPit[(int)zedPositionY][(int)zedPositionX];
-	endNode = mapOfPit[8][(int)zedPositionX+2];
+	startNode = mapOfPit[(int)robotPositionY][(int)robotPositionX];
+	endNode = mapOfPit[8][(int)robotPositionX+2];
 	cmdLineOccupancyMap();
 	cmdLineNobs();
 	//thiccOccupancymap(3);
