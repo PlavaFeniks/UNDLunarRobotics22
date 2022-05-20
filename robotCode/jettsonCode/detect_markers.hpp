@@ -68,4 +68,5 @@ const char* keys  =
 }
 
 void fiducial(int argc, char **argv);
+tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int, char **);
 

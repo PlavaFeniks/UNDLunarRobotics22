@@ -68,6 +68,7 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu")
 	find_package(ZED 3 REQUIRED)
 	find_package(CUDA ${ZED_CUDA_VERSION} EXACT REQUIRED)
 	find_package(OpenCV 4.5.4 REQUIRED)
+	find_package(JetsonGPIO REQUIRED)
 
 	add_executable(autonomous ${PROJECT_SOURCE_DIR}/jettsonCode/main.cpp)
 	#add_executable(detect_markers ${PROJECT_SOURCE_DIR}/jettsonCode/detect_markers.cpp)
@@ -95,12 +96,16 @@ elseif (${CMAKE_LIBRARY_ARCHITECTURE} STREQUAL "aarch64-linux-gnu")
 	target_include_directories(autonomous PUBLIC ${CUDA_INCLUDE_DIRS})
 	target_include_directories(autonomous PUBLIC ${ZED_INCLUDE_DIRS})
 	target_include_directories(autonomous PUBLIC ${OpenCV_INCLUDE_DIRS})	
+	target_include_directories(autonomous PUBLIC ${JetsonGPIO_INCLUDE_DIRS})
+
 	
 	
 	#target_include_directories(detect_markers PUBLIC /usr/local/include/opencv4/opencv2/aruco.hpp)
 	target_link_libraries(autonomous pthread)
 	#include_directories(${OpenCV_INCLUDE_DIRS})
 	#target_link_libraries(detect_markers ${OpenCV_LIBS})
+	target_link_libraries(autonomous JetsonGPIO::JetsonGPIO)
+
 	target_sources(autonomous PUBLIC ${PROJECT_SOURCE_DIR}/jettsonCode/detect_markers.cpp)
 	target_link_libraries(autonomous ${OpenCV_LIBS})
     if (LINK_SHARED_ZED)

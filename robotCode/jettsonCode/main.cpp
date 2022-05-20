@@ -29,8 +29,8 @@
 #define IMAGEWIDTH 1280 //x size of image
 #define IMAGEHEIGHT 720 //y size of image
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
-#define XJETSONRELATIVETOROBOT -3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
-#define YJETSONRELATIVETOROBOT 3.49 //where the jetson is relative to the robot pov CENTIMETERS/10
+float XJETSONRELATIVETOROBOT = -1.778; //where the jetson is relative to the robot pov CENTIMETERS/10
+float YJETSONRELATIVETOROBOT = 6.096; //where the jetson is relative to the robot pov CENTIMETERS/10
 float PI = 3.14159265;
 
 float fiducialPositionX = 0;
@@ -85,10 +85,9 @@ void miningSetup()
     PID_valsScrew[PID_I] = .000;
     PID_valsScrew[PID_D] = .5;
     PID_valsScrew[PID_F] = .04;
-	//buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
+	buckets = new TalonPair(5,VELOCITY,limits, PID_valsBuck);
 	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
-
-	//screwdriver = new TalonPair(5);
+	screwdriver = new TalonPair(6);
 	cout<<"miningSetup Complete "<<endl;
 }
 
@@ -100,36 +99,47 @@ void makeRowIntraversable()
 	}
 }
 
-void fiducialTest()
+void testMovement(float speed)
 {
-	//fiducial();
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point   end = std::chrono::steady_clock::now();
+	
+	while (std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5)
+	{
+		end = std::chrono::steady_clock::now();
+		locomotion.SETSPEED(-speed, speed);
+	}
+	locomotion.SETSPEED(0,0);
+	begin = std::chrono::steady_clock::now();
+	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5)
+	{
+		end = std::chrono::steady_clock::now();
+		locomotion.SETSPEED(speed, speed);
+	}
+	locomotion.SETSPEED(0,0);
+	begin = std::chrono::steady_clock::now();
+	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5)
+	{
+		end = std::chrono::steady_clock::now();
+		locomotion.SETSPEED(-speed, -speed);
+	}
 }
 
 int main(int argc, char **argv)
 {
-	
-	// Set configuration parameters
-	std::string interface;
-	interface = "can0";
-	int temp; 
-	if (temp = (ctre::phoenix::platform::can::SetCANInterface(interface.c_str())) == -1){
-		perror("");
-		std::_Exit(0);
-	}
-
-
+	cout << "welcome to my lets play\n";
 	//initialization for mining and deposition
 	readSerial* ampSerial = new readSerial((char*)"/dev/ttyUSB0");
 	TalonPair * Motor_hopper_belt = new TalonPair(7);
-	
 	
 	if (argc > 1 and  strcmp(argv[1], "mining") == 0)
 	{
 		
 		miningSetup();
-		cout <<"begining "<<endl;
-		LimitSwitchTest();
-		
+//		cout <<"begining "<<endl;
+//		actuatorPos(ampSerial,0.00) ;
+//		LimitSwitchTest();
+		MiningTime1(ampSerial, buckets, screwdriver);		
 		//preMining(ampSerial,buckets,screwdriver);
 		/*
 		actuatorCalibration(ampSerial) ;
@@ -179,8 +189,16 @@ int main(int argc, char **argv)
 		//deposition
 		deposition(ampSerial, Motor_hopper_belt);
 	}
-	fiducial(argc, argv);
-	return 1;
+	else if (argc > 1 and strcmp(argv[1], "fiducial") == 0)
+	{
+		fiducial(argc, argv);
+		return 1;
+	}
+	else if (argc > 1 and strcmp(argv[1], "movement") == 0)
+	{
+		testMovement(400);
+		return 1;	
+	}
   
     InitParameters init_parameters;
     init_parameters.depth_mode = DEPTH_MODE::PERFORMANCE; // Use PERFORMANCE depth mode
@@ -202,14 +220,28 @@ int main(int argc, char **argv)
 	initializePositionalTracking();
 	
 	int scale = 10; //bigger is more zoomed out, cm/scale
-	int threshVal = 100;
+	
+	int threshVal = 40;
+	float confidenceZedThreshhold = 75;
+	OccThresh = -.3;
+	if (argc > 4 and strcmp(argv[1], "Vision") == 0) //order of args is Vision threshVal OccThresh confidenceZedThreshhold
+	{
+		cout << "setting threshhold values\n";
+		threshVal = atoi(argv[2]);
+		confidenceZedThreshhold = atof(argv[3]);
+		OccThresh = atof(argv[4]);
+	}
+	
+	
+	
+	
 	//generate map
-	getCloudAndPlane(scale);
+	getCloudAndPlane(scale, confidenceZedThreshhold, threshVal);
 	startNode = mapOfPit[(int)zedPositionY][(int)zedPositionX];
-	endNode = mapOfPit[15][(int)zedPositionX];
+	endNode = mapOfPit[8][(int)zedPositionX+2];
 	cmdLineOccupancyMap();
 	cmdLineNobs();
-	thiccOccupancymap(3);
+	//thiccOccupancymap(3);
 
 	FindPath(startNode);
 	
@@ -217,7 +249,7 @@ int main(int argc, char **argv)
 	//generate with thickening
 	cmdLineOccupancyMap();
 	
-	if (argc > 1 and  strcmp(argv[1], "testMap"))
+	if (argc > 1 and  strcmp(argv[1], "Vision") == 0)
 	{
 		// Close the camera
 		zed.close();

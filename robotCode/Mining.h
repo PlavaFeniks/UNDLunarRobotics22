@@ -43,12 +43,13 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
 
     float *arr;
     arr = new float(10);            
+cout << "actuatorPos\n";
     arr = ampSerial->getSerialVals(10);
 	arr = ampSerial->getSerialVals(10);
     float rightPos = arr[6]; 	//
     float leftPos = arr[7];	//
 
-    float speedPercent = .9;
+    float speedPercent = .8;
 
     cout<<"Right POS "<< arr[6]<< " Left POS " << arr[7] << endl;
 
@@ -59,7 +60,7 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
         if ( rightPos>setPOS){
 			while(true)
 			{
-				cout << "first\n";
+				//cout << "first\n";
 
 				arr = ampSerial->getSerialVals(10);
 				rightPos = arr[6]; 	
@@ -84,7 +85,7 @@ void actuatorPos(readSerial* ampSerial,float setPOS){
         else if ( rightPos<setPOS){
 			while(true)
 				{
-				cout << "second\n";
+				//cout << "second\n";
 
 				arr = ampSerial->getSerialVals(10);
 				rightPos = arr[6]; 	//
@@ -183,6 +184,7 @@ void LimitSwitchTest(){
 
 	int switchL;
 	int switchH;
+	int hallBoi;
 
     
     
@@ -205,11 +207,11 @@ void LimitSwitchTest(){
 			//std::_Exit(1);
 			//return;
 		}
-		else if (hallBoi == 0 )
+/*		else if (hallBoi == 0 )
 		{
 				cout<<"Halleffect"<<endl;
 			
-		}
+		}*/
 		else {
 			cout<<"neither Pressed" << endl;
 		}
@@ -296,7 +298,7 @@ switchL = GPIO::input(LSwitch); //lower limit switch
 switchH = GPIO::input(HSwitch); //upper limit switch
 
 
-int BucketSpeed = 350;
+int BucketSpeed = -100;
 float ScrewSpeed = -.3;
 
 	if(switchH !=1){
@@ -352,7 +354,7 @@ void MiningTime1(readSerial* ampSerial, TalonPair* buckets, TalonPair* screwdriv
     float  IBuckEX  = 9.5; // Current epected
 	float  IScrewEX  = 7; // Current epected
     
-    int BucketSpeed = 350; // quad speed = .1/60*4096*RPM/gearbox. Efficiency speed is 12150 rpm btw
+    int BucketSpeed = -100; // quad speed = .1/60*4096*RPM/gearbox. Efficiency speed is 12150 rpm btw
 //    int BucketSpeed = 0;
     //int buckScrewRatio = 5; //number of revolution of bucket shaft to revolutions of screw shaft
     //int ScrewSpeed = -800; //relation between bucket speed and screw speed

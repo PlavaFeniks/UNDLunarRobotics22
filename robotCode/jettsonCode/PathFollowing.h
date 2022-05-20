@@ -84,13 +84,14 @@ float getDistanceDifference(TransformationData current, TransformationData goalS
 
 void unstuckRobot(bool isMovingForwards = true) //unstuck robot
 {
+	float speed = 750;
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	while(std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 1)
 	{
-		//isMovingForwards ? locomotion.SETSPEED(-speed, speed) : locomotion.SETSPEED(speed, -speed);
+		isMovingForwards ? locomotion.SETSPEED(-speed, speed) : locomotion.SETSPEED(speed, -speed);
 	}
-	//locomotion.SETSPEED(0, 0);
+	locomotion.SETSPEED(0, 0);
 }
 
 //------------------------------------backwards
@@ -101,7 +102,7 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 	
 	//find initial angle
 	getTranslationImage(current, isMovingForwards);
-	determineAngleToGoal(*current, goalState);
+	determineAngleToGoal(*current, goalState, isMovingForwards);
 	float angleDiff = getAngleDifference(*current, *goalState);
 	cout << "-----\n";
 	cout << "Goal X: " << goalState->tx << " Y: " << goalState->ty << "\nCurrent X:" << current->tx << " Y: " << current->ty << "\n\n";
@@ -113,9 +114,9 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 	{
 		end = std::chrono::steady_clock::now();
 		getTranslationImage(current, isMovingForwards);
-		angleDiff = getAngleDifference(*current, *goalState);
+		angleDiff = -getAngleDifference(*current, *goalState);
 		
-		if (std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5) //stuck in hole, took 5 seconds to turn
+		if (std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() > 5) //stuck in hole, took 5 seconds to turn
 		{
 			cout << "stuck" << endl;
 			return false;
@@ -123,11 +124,11 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 		else if (abs(angleDiff) < ERRORRATEANGLE) //reach target angle
 		{
 			cout << "hit target angle, leftover" << angleDiff << "\n\n";
-			//locomotion.SETSPEED(0, 0);
+			locomotion.SETSPEED(0, 0);
 			break;
 		}
-		else if (angleDiff > 0);// locomotion.SETSPEED(speed, speed); //turn left
-		else if (angleDiff < 0);// locomotion.SETSPEED(-speed, -speed); //turn right
+		else if (angleDiff > 0) locomotion.SETSPEED(-speed, -speed); //turn left
+		else if (angleDiff < 0) locomotion.SETSPEED(speed, speed); //turn right
 		
 	}
 	
@@ -144,7 +145,7 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 		distanceToGoal = getDistanceDifference(*current, *goalState);
 		float distanceToNextGoal = getDistanceDifference(*current, *nextGoalState);
 		
-		if (std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() < 5) //stuck in hole, took 5 seconds to move
+		if (std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() > 5) //stuck in hole, took 5 seconds to move
 		{
 			cout << "stuck" << endl;
 			return false;
@@ -152,22 +153,23 @@ bool turnMove(TransformationData* current, TransformationData* goalState, Transf
 		else if (distanceToGoal<ERRORRATEDISTANCE) //reached target distance
 		{
 			cout << "hit target distance, leftover" << distanceToGoal << "\n\n";
-			//locomotion.SETSPEED(0,0);
+			locomotion.SETSPEED(0,0);
 			break;
 		}
 		else if (distanceToNextGoal<distanceToGoal) //overshot distance
 		{
 			cout << "overshot target, distance " << distanceToGoal << "\n\n";
-			//locomotion.SETSPEED(0,0);
+			locomotion.SETSPEED(0,0);
 			break;
 		}
-		//else isMovingForwards ? locomotion.SETSPEED(-speed, speed) : locomotion.SETSPEED(speed, -speed);
+		else isMovingForwards ? locomotion.SETSPEED(-speed, speed) : locomotion.SETSPEED(speed, -speed);
 	}
+	return true;
 }
 bool followPath(AStarNode* startingNode, TransformationData* current, TransformationData* goalState, TransformationData* nextGoalState,
 	bool isMovingForwards = true) //goes from start to end ndoe
 {
-	cout << "moving backwards\nSleeping for 5 seconds\n";
+	cout << "moving\nSleeping for 5 seconds\n";
 	sleep(5);
 	AStarNode* currentNode = startingNode;
 	
@@ -194,7 +196,7 @@ bool followPath(AStarNode* startingNode, TransformationData* current, Transforma
 		}
 		
 		float distance;
-		getTranslationImage(current);
+		getTranslationImage(current, isMovingForwards);
 		distance = getDistanceDifference(*current, *goalState);
 		if (distance < ERRORRATEDISTANCE)
 		{
@@ -209,5 +211,6 @@ bool followPath(AStarNode* startingNode, TransformationData* current, Transforma
 		}
 		currentNode = nextNode;
 	}
+	return true;
 }
 

@@ -37,6 +37,8 @@ chassis::chassis(float* PID_val){
     __brght = new TalonPair(RearRight, VELOCITY, limits, PID_vals);
     __frght = new TalonPair(FrontRight, VELOCITY, limits, PID_vals);
     __fleft = new TalonPair(FrontLeft, VELOCITY, limits, PID_vals);
+    __fleft->INVERT();
+    __brght->INVERT();
     setup(false);
     cout<<"Successfully created chassis control with velocitySettings"<<endl;
 }
@@ -64,7 +66,7 @@ void chassis::SETSPEED(double _lSpeed, double _rspeed){
     __frght->SETSPEED(_rspeed);
     __bleft->SETSPEED(_lSpeed);
     __brght->SETSPEED(_rspeed);
-    cout<< "Chassis Speed Left: " <<_lSpeed << " Right: " <<_rspeed<<endl;
+    //cout<< "Chassis Speed Left: " <<_lSpeed << " Right: " <<_rspeed<<endl;
 }
 
 //Use int for issues regarding likely precision
