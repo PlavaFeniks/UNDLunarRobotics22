@@ -14,8 +14,8 @@ void getTranslationImage(TransformationData* updateOrient, bool isMovingForward 
 			auto state = zed.getPosition(zed_pose, REFERENCE_FRAME::WORLD);
 			if (state == POSITIONAL_TRACKING_STATE::OK)
 			{
-				x = updateOrient->tx=zed_pose.getTranslation().x/10 + XJETSONRELATIVETOROBOT + zedPositionX;
-				y = updateOrient->ty=zed_pose.getTranslation().y/10 + YJETSONRELATIVETOROBOT + zedPositionY;
+				x = updateOrient->tx=zed_pose.getTranslation().x/10 + XZedRelativeToRobot + robotPositionX;
+				y = updateOrient->ty=zed_pose.getTranslation().y/10 + YZedRelativeToRobot + robotPositionY;
 				z = updateOrient->tz=zed_pose.getTranslation().z/10;
 				
 				rx = updateOrient->rx = zed_pose.getEulerAngles(false).x;
@@ -26,10 +26,10 @@ void getTranslationImage(TransformationData* updateOrient, bool isMovingForward 
 				//orientation set for the robot's position
 				float theta, gamma, alpha = 0;
 				theta = rz;
-				alpha = atan2(YJETSONRELATIVETOROBOT, XJETSONRELATIVETOROBOT)* 180 / PI;
+				alpha = atan2(YZedRelativeToRobot, XZedRelativeToRobot)* 180 / PI;
 				gamma = alpha + theta;
 				
-				float distanceToCenterofRobot = sqrt(pow(XJETSONRELATIVETOROBOT, 2) + pow(YJETSONRELATIVETOROBOT, 2));
+				float distanceToCenterofRobot = sqrt(pow(XZedRelativeToRobot, 2) + pow(YZedRelativeToRobot, 2));
 				updateOrient->tx = x-distanceToCenterofRobot*cos((gamma) / 180 * PI);
 				updateOrient->ty = y-distanceToCenterofRobot*sin((gamma) / 180 * PI);
 				updateOrient->rz = updateOrient->rz;

@@ -167,8 +167,8 @@ void getCloudAndPlane(int scale, float confidenceZedThreshhold = 50, double thre
 				point_cloud.getValue(i,j,&point_cloud_value);
 				if (std::isfinite(point_cloud_value.z))
 				{
-					Xval[i][j] = new float(point_cloud_value.x/scale + zedPositionX);
-					Yval[i][j] = new float(point_cloud_value.y/scale + zedPositionY);
+					Xval[i][j] = new float(point_cloud_value.x/scale + robotPositionX);
+					Yval[i][j] = new float(point_cloud_value.y/scale + robotPositionY);
 					Zval[i][j] = new float(point_cloud_value.z/scale);
 					int x = int(*Xval[i][j]);
 					int y = int(*Yval[i][j]);

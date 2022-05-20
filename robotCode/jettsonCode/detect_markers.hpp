@@ -67,6 +67,5 @@ const char* keys  =
         "CORNER_REFINE_CONTOUR=2, CORNER_REFINE_APRILTAG=3}";
 }
 
-void fiducial(int argc, char **argv);
+tuple<float, float, float, bool> fiducialNums(int argc, char **argv);
 tuple<vector<Vec3d>,vector<Vec3d>, bool> getFiducialPose(int, char **);
-
