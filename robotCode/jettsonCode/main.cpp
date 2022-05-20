@@ -29,8 +29,8 @@
 #define IMAGEWIDTH 1280 //x size of image
 #define IMAGEHEIGHT 720 //y size of image
 #define ACCURACY 10 //how many times it will ZED grab images for point cloud
-#define XJETSONRELATIVETOROBOT -1.778 //where the jetson is relative to the robot pov CENTIMETERS/10
-#define YJETSONRELATIVETOROBOT 6.096 //where the jetson is relative to the robot pov CENTIMETERS/10
+float XJETSONRELATIVETOROBOT = -1.778; //where the jetson is relative to the robot pov CENTIMETERS/10
+float YJETSONRELATIVETOROBOT = 6.096; //where the jetson is relative to the robot pov CENTIMETERS/10
 float PI = 3.14159265;
 
 float fiducialPositionX = 0;
@@ -85,9 +85,9 @@ void miningSetup()
     PID_valsScrew[PID_I] = .000;
     PID_valsScrew[PID_D] = .5;
     PID_valsScrew[PID_F] = .04;
-	//buckets = new TalonPair(6,VELOCITY,limits, PID_valsBuck);
+	buckets = new TalonPair(5,VELOCITY,limits, PID_valsBuck);
 	//TalonPair* screwdriver= new TalonPair(5,VELOCITY,limits, PID_valsScrew);
-	//screwdriver = new TalonPair(5);
+	screwdriver = new TalonPair(6);
 	cout<<"miningSetup Complete "<<endl;
 }
 
@@ -136,10 +136,10 @@ int main(int argc, char **argv)
 	{
 		
 		miningSetup();
-		cout <<"begining "<<endl;
-		actuatorPos(ampSerial,0.00) ;
-		//LimitSwitchTest();
-		
+//		cout <<"begining "<<endl;
+//		actuatorPos(ampSerial,0.00) ;
+//		LimitSwitchTest();
+		MiningTime1(ampSerial, buckets, screwdriver);		
 		//preMining(ampSerial,buckets,screwdriver);
 		/*
 		actuatorCalibration(ampSerial) ;
